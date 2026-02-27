@@ -1,0 +1,397 @@
+/* ===================================================================
+   LANDING/INFO PAGES STYLES
+   CSS for student landing pages (home.html, about.html, contact.html)
+   =================================================================== */
+
+/* Shared CSS Variables */
+:root {
+    --primary-blue: #2c5aa0;
+    --secondary-blue: #4a90e2;
+    --primary-color: #2A4365;
+    --secondary-color: #4299E1;
+    --accent-color: #48BB78;
+    --dark-gray: #2c3e50;
+    --light-gray: #7f8c8d;
+    --text-color: #4A5568;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, system-ui, -apple-system, sans-serif;
+    color: var(--dark-gray);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #F7FAFC;
+    scroll-behavior: smooth;
+}
+
+/* ==================== SHARED NAVBAR STYLES ==================== */
+
+.navbar {
+    background: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem 2rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.navbar-brand span:first-child {
+    color: var(--primary-color);
+}
+
+.navbar-brand span:last-child {
+    color: var(--secondary-color);
+}
+
+.nav-link {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--dark-gray);
+    transition: color 0.3s ease;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+}
+
+.nav-link:hover {
+    color: var(--primary-blue);
+}
+
+/* ==================== HOME PAGE STYLES ==================== */
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #f9fbff 0%, #e6efff 100%);
+    padding: 10rem 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--primary-blue);
+}
+
+.lead-text {
+    font-size: 1.3rem;
+    color: var(--light-gray);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Feature Cards */
+.feature-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    margin: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: var(--secondary-blue);
+    margin-bottom: 1.5rem;
+}
+
+.feature-card h3 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+/* Statistics Section */
+.stat-section {
+    background: var(--primary-blue);
+    color: white;
+    padding: 4rem 0;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Testimonial Cards */
+.testimonial-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.testimonial-text {
+    font-style: italic;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.testimonial-author {
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+/* ==================== ABOUT PAGE STYLES ==================== */
+
+.container {
+    max-width: 1200px;
+    margin: 100px auto 40px;
+    padding: 0 2rem;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.about-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.about-header p {
+    font-size: 1.1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    color: var(--text-color);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.mission-section {
+    background: white;
+    padding: 3rem;
+    border-radius: 8px;
+    margin: 3rem 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.mission-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* ==================== CONTACT PAGE STYLES ==================== */
+
+.contact-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.contact-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.contact-header p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    color: var(--text-color);
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.contact-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+    text-align: center;
+}
+
+.contact-card:hover {
+    transform: translateY(-5px);
+}
+
+.contact-icon {
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.contact-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.contact-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.contact-value {
+    color: var(--text-color);
+}
+
+.contact-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.contact-link:hover {
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+/* ==================== SHARED COMPONENTS ==================== */
+
+/* Buttons */
+.btn {
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--secondary-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+.btn-secondary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding: 2rem 0;
+    border-top: 1px solid #E2E8F0;
+    color: #718096;
+}
+
+footer p {
+    margin: 0.5rem 0;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 1rem;
+        height: auto;
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+
+    .container {
+        margin-top: 80px;
+        padding: 0 1rem;
+    }
+
+    .hero-section {
+        padding: 6rem 0;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .lead-text {
+        font-size: 1.1rem;
+    }
+
+    .about-header h1,
+    .contact-header h1 {
+        font-size: 2rem;
+    }
+
+    .mission-section {
+        padding: 2rem;
+    }
+
+    .feature-card {
+        margin: 0.5rem;
+        padding: 1.5rem;
+    }
+
+    .features-grid,
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 1.75rem;
+    }
+
+    .feature-icon,
+    .contact-icon {
+        font-size: 2rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}

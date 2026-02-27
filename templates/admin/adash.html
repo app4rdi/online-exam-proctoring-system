@@ -1,0 +1,391 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Admin Dashboard - ProctorEdu{% endblock %}
+
+{% from 'admin/_menu_macros.html' import admin_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ admin_sidebar_menu('dashboard') }}
+{% endblock %}
+
+{% block topbar_title %}Bảng điều khiển quản trị{% endblock %}
+{% block topbar_icon %}<i class="fas fa-shield-alt"></i>{% endblock %}
+
+{% block page_content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <h2>Xin chào, {{ user.name }}!</h2>
+    <p>Chào mừng đến với Admin Dashboard - Quản lý hệ thống giám sát thi</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-primary);">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_students or 0 }}</div>
+        <div class="stat-label">Tổng sinh viên</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-secondary);">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_teachers or 0 }}</div>
+        <div class="stat-label">Tổng giáo viên</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-success);">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value">{{ stats.total_exams or 0 }}</div>
+        <div class="stat-label">Tổng đề thi</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-warning);">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="stat-value">{{ stats.pending_complaints or 0 }}</div>
+        <div class="stat-label">Phản hồi chờ xử lý</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="content-section">
+    <div class="section-header">
+        <h3 class="section-title">
+            <i class="fas fa-bolt"></i>
+            Thao tác nhanh
+        </h3>
+    </div>
+    
+    <div class="quick-actions-grid">
+        <a href="{{ url_for('admin.manage_students') }}" class="quick-action-card">
+            <div class="quick-action-icon" style="background: var(--gradient-primary);">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h4>Quản lý sinh viên</h4>
+            <p>Xem và quản lý tài khoản sinh viên</p>
+            <div class="quick-action-badge">{{ stats.total_students }}</div>
+        </a>
+        
+        <a href="{{ url_for('admin.manage_teachers') }}" class="quick-action-card">
+            <div class="quick-action-icon" style="background: var(--gradient-secondary);">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <h4>Quản lý giáo viên</h4>
+            <p>Xem và quản lý tài khoản giáo viên</p>
+            <div class="quick-action-badge">{{ stats.total_teachers }}</div>
+        </a>
+        
+        <a href="/admin/database" class="quick-action-card">
+            <div class="quick-action-icon" style="background: var(--gradient-success);">
+                <i class="fas fa-database"></i>
+            </div>
+            <h4>Cơ sở dữ liệu</h4>
+            <p>Quản lý và backup dữ liệu hệ thống</p>
+        </a>
+        
+        <a href="#complaints-section" class="quick-action-card">
+            <div class="quick-action-icon" style="background: var(--gradient-warning);">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <h4>Phản hồi</h4>
+            <p>Xem và trả lời phản hồi từ người dùng</p>
+            <div class="quick-action-badge">{{ stats.pending_complaints }}</div>
+        </a>
+    </div>
+</div>
+
+<!-- Pending Complaints Section -->
+<div class="content-section" id="complaints-section">
+    <div class="section-header">
+        <h3 class="section-title">
+            <i class="fas fa-exclamation-circle"></i>
+            Phản hồi chờ xử lý
+        </h3>
+        <span class="section-badge">{{ recent_complaints|length }} mới</span>
+    </div>
+    
+    {% if recent_complaints %}
+        <div class="complaints-list">
+            {% for complaint in recent_complaints %}
+            <div class="complaint-card">
+                <div class="complaint-header">
+                    <div class="complaint-id">
+                        <i class="fas fa-ticket-alt"></i>
+                        #{{ complaint.complaint_id }}
+                    </div>
+                    <div class="complaint-meta">
+                        <span class="complaint-user">
+                            <i class="fas fa-user"></i>
+                            {{ complaint.user_name or 'Ẩn danh' }}
+                            <span class="user-badge">{{ complaint.user_type }}</span>
+                        </span>
+                        <span class="complaint-time">
+                            <i class="fas fa-clock"></i>
+                            {{ complaint.submission_time.strftime('%d/%m/%Y %H:%M') if complaint.submission_time else 'N/A' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="complaint-body">
+                    <p>{{ complaint.complaint_text }}</p>
+                </div>
+                
+                {% if complaint.status|lower == 'pending' %}
+                <form class="complaint-reply-form" action="/send_reply" method="POST">
+                    <input type="hidden" name="complaint_id" value="{{ complaint.complaint_id }}">
+                    <div class="form-group">
+                        <textarea 
+                            name="reply_text" 
+                            class="form-control" 
+                            placeholder="Nhập phản hồi của bạn..."
+                            rows="3"
+                            required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Gửi phản hồi
+                    </button>
+                </form>
+                {% else %}
+                <div class="complaint-status resolved">
+                    <i class="fas fa-check-circle"></i>
+                    Đã xử lý
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h4>Không có phản hồi chờ xử lý</h4>
+            <p>Tất cả phản hồi đã được xử lý thành công</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Recent Exams Section -->
+{% if recent_exams %}
+<div class="content-section">
+    <div class="section-header">
+        <h3 class="section-title">
+            <i class="fas fa-file-alt"></i>
+            Đề thi gần đây
+        </h3>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên đề thi</th>
+                    <th>Giáo viên</th>
+                    <th>Ngày thi</th>
+                    <th>Giờ thi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in recent_exams %}
+                <tr>
+                    <td><strong>#{{ exam.exam_id }}</strong></td>
+                    <td>{{ exam.exam_title }}</td>
+                    <td>
+                        <span class="user-badge">{{ exam.teacher_name }}</span>
+                    </td>
+                    <td>{{ exam.exam_date }}</td>
+                    <td>{{ exam.exam_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Additional admin-specific styles */
+.complaints-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.complaint-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.complaint-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: #6366f1;
+}
+
+.complaint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.complaint-id {
+    font-weight: 600;
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.complaint-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.complaint-user, .complaint-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.complaint-body {
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.complaint-reply-form {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+
+.complaint-reply-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.complaint-reply-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.complaint-reply-form textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.complaint-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.complaint-status.resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead {
+    background: #f9fafb;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.section-badge {
+    padding: 0.5rem 1rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+// Auto-refresh complaints every 30 seconds
+setTimeout(() => {
+    location.reload();
+}, 30000);
+
+// Handle form submissions with toast notifications
+document.querySelectorAll('.complaint-reply-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const textarea = this.querySelector('textarea');
+        if (!textarea.value.trim()) {
+            e.preventDefault();
+            showToast('Vui lòng nhập nội dung phản hồi', 'error');
+        }
+    });
+});
+</script>
+{% endblock %}

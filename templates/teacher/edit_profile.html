@@ -1,0 +1,205 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Edit Profile - ProctorEdu{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('edit_profile') }}
+{% endblock %}
+
+{% block topbar_title %}Edit Profile{% endblock %}
+{% block topbar_icon %}<i class="fas fa-user-edit"></i>{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block page_content %}
+<div class="profile-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+        <!-- Profile Header with Avatar -->
+        <div class="profile-header">
+            <div class="profile-avatar-container">
+                <img src="{% if profile_image %}data:image/jpeg;base64,{{ profile_image }}{% else %}https://ui-avatars.com/api/?name={{ teacher_data.fullname|urlencode }}&background=6366f1&color=fff&size=150{% endif %}" 
+                     alt="Profile Picture" 
+                     class="profile-avatar"
+                     id="profile-img">
+                <label for="profile-picture-upload" class="profile-avatar-upload">
+                    <i class="fas fa-camera"></i>
+                    <input type="file" 
+                           id="profile-picture-upload" 
+                           name="profile_pic" 
+                           accept="image/*">
+                </label>
+            </div>
+            <h1 class="profile-name">{{ teacher_data.fullname }}</h1>
+            <p class="profile-role">Teacher</p>
+            
+            <!-- Image Actions -->
+            <div class="image-actions">
+                <button type="button" id="upload-btn" style="display: none" class="btn btn-light btn-sm">
+                    <i class="fas fa-upload"></i> Upload New Picture
+                </button>
+                {% if profile_image %}
+                <form method="POST" style="display: inline">
+                    <button type="submit" name="remove_image" value="1" class="btn btn-light btn-sm">
+                        <i class="fas fa-trash"></i> Remove Picture
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Profile Body -->
+        <div class="profile-body">
+            <!-- Personal Information Section -->
+            <div class="profile-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Personal Information
+                </h3>
+                <form method="POST" id="info-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullname">Full Name</label>
+                            <input type="text" 
+                                   id="fullname" 
+                                   name="fullname" 
+                                   value="{{ teacher_data.fullname }}" 
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ teacher_data.email }}" 
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contact">Contact Number</label>
+                            <input type="text" 
+                                   id="contact" 
+                                   name="contact" 
+                                   value="{{ teacher_data.contact or '' }}" 
+                                   placeholder="Enter your contact number">
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   value="{{ teacher_data.username }}" 
+                                   disabled>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <a href="{{ url_for('teacher.teacher_dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Account Information Section -->
+            <div class="profile-section">
+                <h3 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Account Information
+                </h3>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Teacher ID</div>
+                        <div class="info-value">{{ teacher_data.authority_id }}</div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value">{{ teacher_data.created_at.strftime('%B %d, %Y') if teacher_data.created_at else 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Change Link -->
+            <div class="profile-section">
+                <h3 class="section-title">
+                    <i class="fas fa-lock"></i>
+                    Security
+                </h3>
+                <a href="{{ url_for('teacher.change_password') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+    // Form to upload image
+    let imageForm = null;
+    
+    document.getElementById('profile-picture-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            document.getElementById('profile-img').src = url;
+            document.getElementById('upload-btn').style.display = 'inline-block';
+        }
+    });
+    
+    document.getElementById('upload-btn').addEventListener('click', function() {
+        const fileInput = document.getElementById('profile-picture-upload');
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('profile_pic', fileInput.files[0]);
+            
+            fetch('{{ url_for("teacher.teacher_edit_profile") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Profile picture updated successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to upload profile picture', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while uploading', 'error');
+            });
+        }
+    });
+</script>
+{% endblock %}

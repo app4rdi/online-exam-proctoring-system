@@ -1,0 +1,295 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block title %}Chi Tiết Vi Phạm{% endblock %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('violations') }}
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="/teacher/violations" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Quay lại Danh Sách
+</a>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Page Header with Info Cards -->
+<div class="violations-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2rem 2.5rem; margin-bottom: 2rem; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: #fef3c7;"></i>
+        </div>
+        <div>
+            <h1 style="margin: 0; font-size: 2rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Chi Tiết Vi Phạm</h1>
+            <p style="margin: 0.25rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Xem chi tiết các vi phạm trong quá trình làm bài</p>
+        </div>
+    </div>
+    
+    <!-- Info Cards Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+        {% if exam_title %}
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-alt" style="font-size: 1.1rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 0.25rem;">Đề Thi</div>
+                    <div style="font-weight: 600; font-size: 0.95rem; line-height: 1.3;">{{ exam_title }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if student_info %}
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-user-graduate" style="font-size: 1.1rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 0.25rem;">Sinh Viên</div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">{{ student_info.fullname }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-list-ol" style="font-size: 1.1rem;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 0.25rem;">Tổng Vi Phạm</div>
+                    <div style="font-weight: 700; font-size: 1.5rem;">{{ violations|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline Header -->
+<div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+    <div style="flex: 1; height: 2px; background: linear-gradient(to right, #e5e7eb, transparent);"></div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-weight: 600;">
+        <i class="fas fa-clock"></i>
+        <span>Timeline Vi Phạm</span>
+    </div>
+    <div style="flex: 1; height: 2px; background: linear-gradient(to left, #e5e7eb, transparent);"></div>
+</div>
+
+<!-- Violations Timeline -->
+<div class="violations-timeline">
+    {% if violations %}
+        {% for violation in violations %}
+            <div class="violation-card" style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 2rem; overflow: hidden; border-left: 5px solid {% if violation.violation_type in ['no_face', 'multiple_faces', 'prohibited_object', 'camera_disabled'] %}#ef4444{% else %}#f59e0b{% endif %}; transition: transform 0.2s, box-shadow 0.2s; {% if loop.index == 1 %}animation: slideIn 0.3s ease-out;{% endif %}" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 30px rgba(0,0,0,0.12)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';">
+                <div style="display: grid; grid-template-columns: 350px 1fr; gap: 0;">
+                    <!-- Image Section -->
+                    <div class="violation-image-container" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); position: relative; border-right: 1px solid #e2e8f0;">
+                        <img src="{{ url_for('teacher.violation_image', violation_id=violation.violation_id) }}"
+                             alt="Violation capture"
+                             class="violation-image"
+                             style="width: 100%; height: 300px; object-fit: cover;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="no-image" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #94a3b8;">
+                            <div style="width: 80px; height: 80px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                                <i class="fas fa-image" style="font-size: 2rem;"></i>
+                            </div>
+                            <p style="margin: 0; font-weight: 500;">Không có ảnh ghi nhận</p>
+                        </div>
+                        
+                        <!-- Violation Badge -->
+                        <div style="position: absolute; top: 1.25rem; right: 1.25rem; background: {% if violation.violation_type in ['no_face', 'multiple_faces', 'prohibited_object', 'camera_disabled'] %}linear-gradient(135deg, #ef4444 0%, #dc2626 100%){% else %}linear-gradient(135deg, #f59e0b 0%, #d97706 100%){% endif %}; color: white; padding: 0.65rem 1.25rem; border-radius: 10px; font-weight: 700; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); letter-spacing: 0.5px; text-transform: uppercase;">
+                            <i class="fas fa-exclamation-circle" style="margin-right: 0.35rem;"></i>
+                            {% if violation.violation_type in ['no_face', 'multiple_faces', 'prohibited_object', 'camera_disabled'] %}
+                                Nghiêm Trọng
+                            {% else %}
+                                Cảnh Báo
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Details Section -->
+                    <div class="violation-details" style="padding: 2rem 2.5rem;">
+                        <!-- Timestamp - Prominent -->
+                        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 4px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 50px; height: 50px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <i class="fas fa-clock" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Thời Gian Vi Phạm</div>
+                                    <div style="font-size: 1.35rem; font-weight: 700; color: #1e293b;">
+                                        {{ violation.timestamp.strftime('%d/%m/%Y lúc %H:%M:%S') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Violation Type -->
+                        <div class="detail-item" style="display: flex; align-items: start; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #e2e8f0;">
+                            <div style="width: 36px; height: 36px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-tag" style="color: #64748b;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Loại Vi Phạm</div>
+                                <div style="font-weight: 600; color: #1e293b; font-size: 1.05rem;">
+                                    {% if violation.violation_type == 'no_face' %}
+                                        <i class="fas fa-user-slash" style="color: #ef4444;"></i> Không phát hiện khuôn mặt
+                                    {% elif violation.violation_type == 'multiple_faces' %}
+                                        <i class="fas fa-users" style="color: #ef4444;"></i> Phát hiện nhiều người
+                                    {% elif violation.violation_type == 'prohibited_object' %}
+                                        <i class="fas fa-mobile-alt" style="color: #ef4444;"></i> Phát hiện vật cấm
+                                    {% elif violation.violation_type == 'camera_disabled' %}
+                                        <i class="fas fa-video-slash" style="color: #ef4444;"></i> Tắt camera
+                                    {% elif violation.violation_type == 'fullscreen_exit' %}
+                                        <i class="fas fa-compress" style="color: #f59e0b;"></i> Thoát chế độ toàn màn hình
+                                    {% elif violation.violation_type == 'poor_quality' %}
+                                        <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Chất lượng hình ảnh kém
+                                    {% elif violation.violation_type == 'poor_brightness' %}
+                                        <i class="fas fa-adjust" style="color: #f59e0b;"></i> Độ sáng không đủ
+                                    {% else %}
+                                        {{ violation.violation_type }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        {% if violation.description %}
+                        <div class="detail-item" style="display: flex; align-items: start; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #e2e8f0;">
+                            <div style="width: 36px; height: 36px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-info-circle" style="color: #64748b;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Mô Tả Chi Tiết</div>
+                                <div style="color: #475569; line-height: 1.7; font-size: 0.95rem;">{{ violation.description }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Faces Detected -->
+                        {% if violation.num_faces is not none %}
+                        <div class="detail-item" style="display: flex; align-items: start; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #e2e8f0;">
+                            <div style="width: 36px; height: 36px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user-friends" style="color: #64748b;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Số Khuôn Mặt</div>
+                                <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">
+                                    {% if violation.num_faces == 0 %}
+                                        <span style="color: #ef4444;"><i class="fas fa-times-circle"></i> 0 khuôn mặt</span>
+                                    {% elif violation.num_faces == 1 %}
+                                        <span style="color: #10b981;"><i class="fas fa-check-circle"></i> 1 khuôn mặt</span>
+                                    {% else %}
+                                        <span style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> {{ violation.num_faces }} khuôn mặt</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Violation ID Badge -->
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e2e8f0;">
+                            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); padding: 0.65rem 1.25rem; border-radius: 20px; font-size: 0.8rem; color: #64748b; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <i class="fas fa-fingerprint" style="color: #667eea;"></i>
+                                <span style="text-transform: uppercase; letter-spacing: 0.5px;">ID:</span>
+                                <span style="color: #1e293b; font-weight: 700;">{{ violation.violation_id }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-violations" style="text-align: center; padding: 5rem 2rem; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 2px dashed #e2e8f0;">
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: white;"></i>
+            </div>
+            <h3 style="color: #1e293b; margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 700;">Không Có Vi Phạm</h3>
+            <p style="color: #64748b; font-size: 1.05rem;">Sinh viên đã tuân thủ đầy đủ quy định trong suốt bài thi.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.violations-timeline {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.violation-card {
+    animation: slideIn 0.4s ease-out;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+@media (max-width: 968px) {
+    .violation-card > div {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .violation-image-container {
+        border-right: none !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    
+    .violations-header {
+        padding: 1.5rem 1.25rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .violations-header > div:first-child {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .violations-header h1 {
+        font-size: 1.5rem !important;
+    }
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}My Results - ProctorEdu{% endblock %}
+
+{% from 'student/_menu_macros.html' import student_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ student_sidebar_menu('results') }}
+{% endblock %}
+
+{% block topbar_title %}My Results{% endblock %}
+{% block topbar_icon %}<i class="fas fa-chart-line"></i>{% endblock %}
+
+{% block page_content %}
+
+<div class="result-table-container">
+    {% if results %}
+    <table class="result-table">
+        <thead>
+            <tr>
+                <th>Exam Title</th>
+                <th>Date Submitted</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Violations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('student.exam_answers', answer_id=result.answer_id) }}">
+                        {{ result.exam_title }}
+                    </a>
+                </td>
+                <td>{{ result.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><strong>{{ result.score }}</strong></td>
+                <td>
+                    {% if result.status == 'passed' %}
+                        <span class="status-badge passed">Passed</span>
+                    {% elif result.status == 'failed' %}
+                        <span class="status-badge failed">Failed</span>
+                    {% else %}
+                        <span class="status-badge pending">{{ result.status }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('student.violations_detail', user_id=session['user_id'], exam_id=result.exam_id) }}">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <p>No exam results yet</p>
+        <small>Your results will appear here after you complete an exam</small>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Support Center - Teacher{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('complaints') }}
+{% endblock %}
+
+{% block page_content %}
+
+<div class="page-header">
+    <h1 class="page-title">Support Center</h1>
+</div>
+
+<div class="complaint-section">
+    <h2>Submit New Query</h2>
+    <div class="card">
+        <div class="card-body">
+            <form class="complaint-form" action="/submit_teacher_complaint" method="POST">
+                <textarea 
+                    name="complaint_text" 
+                    placeholder="Describe your issue in detail..."
+                    required
+                ></textarea>
+                <input type="hidden" name="authority_id" value="{{ session.get('authority_id') }}">
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> Submit Query
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="complaint-section">
+    <h2>Previous Inquiries</h2>
+    
+    {% if complaints %}
+        {% for complaint in complaints %}
+        <div class="complaint-card">
+            <div class="complaint-meta">
+                <span>Submitted on {{ complaint['submission_time'] }}</span>
+                <span class="status-indicator status-{{ complaint['status'].lower() }}">
+                    {{ complaint['status'] }}
+                </span>
+            </div>
+            <p class="complaint-text">{{ complaint['complaint_text'] }}</p>
+            
+            {% if complaint['reply_text'] %}
+                <div class="reply-badge">
+                    <i class="fas fa-comment-check"></i>
+                    <span>Official Response: {{ complaint['reply_text'] }}</span>
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card">
+            <div class="card-body">
+                <div class="empty-state">
+                    <i class="fas fa-inbox fa-2x"></i>
+                    <p>No support requests found</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Logout confirmation
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', async function(e) {
+            if(this.href.includes('logout')) {
+                e.preventDefault();
+                const confirmed = await showConfirm(
+                    'You will be logged out of your account.',
+                    'Logout?',
+                    { type: 'warning', confirmText: 'Logout', cancelText: 'Cancel' }
+                );
+                if(confirmed) {
+                    window.location.href = this.href;
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

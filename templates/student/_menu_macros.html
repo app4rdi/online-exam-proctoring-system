@@ -1,0 +1,44 @@
+{% macro student_sidebar_menu(active_page='dashboard') %}
+<div class="menu-section">
+    <div class="menu-section-title">Menu chính</div>
+    <a href="{{ url_for('student.studash') }}" class="menu-item {{ 'active' if active_page == 'dashboard' else '' }}">
+        <i class="menu-item-icon fas fa-home"></i>
+        <span>Bảng điều khiển</span>
+    </a>
+    <a href="{{ url_for('student.exam_list') }}" class="menu-item {{ 'active' if active_page == 'exams' else '' }}">
+        <i class="menu-item-icon fas fa-clipboard-list"></i>
+        <span>Đề thi có sẵn</span>
+    </a>
+    <a href="{{ url_for('student.stu_result') }}" class="menu-item {{ 'active' if active_page == 'results' else '' }}">
+        <i class="menu-item-icon fas fa-chart-line"></i>
+        <span>Kết quả của tôi</span>
+    </a>
+</div>
+
+<div class="menu-section">
+    <div class="menu-section-title">Tài khoản</div>
+    <a href="{{ url_for('student.edit_profile') }}" class="menu-item {{ 'active' if active_page == 'edit_profile' else '' }}">
+        <i class="menu-item-icon fas fa-user-edit"></i>
+        <span>Chỉnh sửa hồ sơ</span>
+    </a>
+    <a href="{{ url_for('student.change_password') }}" class="menu-item {{ 'active' if active_page == 'password' else '' }}">
+        <i class="menu-item-icon fas fa-key"></i>
+        <span>Đổi mật khẩu</span>
+    </a>
+    <a href="{{ url_for('student.stu_complaint') }}" class="menu-item {{ 'active' if active_page == 'complaints' else '' }}">
+        <i class="menu-item-icon fas fa-comment-dots"></i>
+        <span>Phàn nàn</span>
+    </a>
+</div>
+
+<div class="menu-section">
+    <div class="menu-section-title">Hệ thống</div>
+</div>
+
+<div class="menu-section">
+    <a href="{{ url_for('auth.logout') }}" class="menu-item">
+        <i class="menu-item-icon fas fa-sign-out-alt"></i>
+        <span>Đăng xuất</span>
+    </a>
+</div>
+{% endmacro %}

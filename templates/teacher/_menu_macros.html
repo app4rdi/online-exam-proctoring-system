@@ -1,0 +1,51 @@
+{# Teacher Sidebar Menu Macros #}
+
+{% macro teacher_sidebar_menu(active_page='') %}
+<div class="menu-section">
+    <div class="menu-section-title">Menu chính</div>
+    <a href="/teacher/trdash" class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-home"></i>
+        <span>Bảng điều khiển</span>
+    </a>
+    <a href="/teacher/exams" class="menu-item {% if active_page == 'exams' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-list-alt"></i>
+        <span>Đề thi của tôi</span>
+    </a>
+    <a href="/teacher/tr_result" class="menu-item {% if active_page == 'results' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-chart-bar"></i>
+        <span>Kết quả</span>
+    </a>
+    <a href="/teacher/monitor" class="menu-item {% if active_page == 'monitor' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-video"></i>
+        <span>Giám sát</span>
+    </a>
+    <a href="{{ url_for('teacher.violations_list') }}" class="menu-item {% if active_page == 'violations' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-exclamation-triangle"></i>
+        <span>Vi phạm</span>
+    </a>
+</div>
+
+<div class="menu-section">
+    <div class="menu-section-title">Tài khoản</div>
+    <a href="/teacher/edit_profile" class="menu-item {% if active_page == 'edit_profile' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-user-edit"></i>
+        <span>Chỉnh sửa hồ sơ</span>
+    </a>
+    <a href="/teacher/password" class="menu-item {% if active_page == 'password' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-key"></i>
+        <span>Đổi mật khẩu</span>
+    </a>
+    <a href="/teacher/tr_complaint" class="menu-item {% if active_page == 'complaints' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-comment-dots"></i>
+        <span>Phàn nàn</span>
+    </a>
+</div>
+
+<div class="menu-section">
+    <div class="menu-section-title">Hệ thống</div>
+    <a href="/logout" class="menu-item">
+        <i class="menu-item-icon fas fa-sign-out-alt"></i>
+        <span>Đăng xuất</span>
+    </a>
+</div>
+{% endmacro %}

@@ -1,0 +1,53 @@
+# Development docker-compose with hot reload
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: proctor-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: proctor
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ""
+    ports:
+      - "3307:3306"  # Different port to avoid conflict with local MySQL
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./database/proctor.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - proctor-dev-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proctor-app-dev
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: proctor
+      SECRET_KEY: dev-secret-key-not-for-production
+      FLASK_ENV: development
+      FLASK_DEBUG: 1
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/venv  # Exclude venv
+      - /app/__pycache__
+    depends_on:
+      - mysql
+    networks:
+      - proctor-dev-network
+    command: python app.py
+
+volumes:
+  mysql_dev_data:
+
+networks:
+  proctor-dev-network:
+    driver: bridge

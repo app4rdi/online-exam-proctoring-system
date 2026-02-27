@@ -1,0 +1,478 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Đề thi của tôi - ProctorEdu{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('exams') }}
+{% endblock %}
+
+{% block topbar_title %}Đề thi của tôi{% endblock %}
+{% block topbar_icon %}<i class="fas fa-list-alt"></i>{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openCreateExamModal()">
+    <i class="fas fa-plus"></i>
+    Tạo đề thi mới
+</button>
+{% endblock %}
+
+{% block page_content %}
+<!-- Search and Filter Toolbar -->
+<div class="exams-toolbar">
+    <div class="search-filter-row">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="examSearch" placeholder="Tìm kiếm đề thi theo tên..." onkeyup="filterExams()">
+        </div>
+        
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="filterByStatus('all')" data-filter="all">
+                <i class="fas fa-th"></i>
+                Tất cả
+            </button>
+            <button class="filter-btn" onclick="filterByStatus('upcoming')" data-filter="upcoming">
+                <i class="fas fa-clock"></i>
+                Sắp tới
+            </button>
+            <button class="filter-btn" onclick="filterByStatus('past')" data-filter="past">
+                <i class="fas fa-history"></i>
+                Đã qua
+            </button>
+        </div>
+        
+        <select class="sort-select" id="sortSelect" onchange="sortExams()">
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+            <option value="title">Tên A-Z</option>
+            <option value="duration">Thời gian</option>
+        </select>
+    </div>
+</div>
+
+<!-- Exams Count -->
+{% if exams %}
+<div class="exams-header">
+    <div class="exams-count">
+        Tìm thấy <strong id="examCount">{{ exams|length }}</strong> đề thi
+    </div>
+</div>
+{% endif %}
+
+{% if exams %}
+<div class="exams-grid" id="examsGrid">
+    {% for exam in exams %}
+    <div class="exam-card" data-title="{{ exam.exam_title|lower }}" data-date="{{ exam.exam_date }}" data-duration="{{ exam.exam_duration }}">
+        <div class="exam-card-header">
+            <h4 class="exam-card-title">{{ exam.exam_title }}</h4>
+            <div class="exam-card-meta">
+                <span>
+                    <i class="fas fa-calendar"></i>
+                    {{ exam.exam_date }}
+                </span>
+                <span>
+                    <i class="fas fa-clock"></i>
+                    {% if exam.exam_time %}{{ exam.exam_time }}{% else %}--:--{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="exam-card-body">
+            <div class="exam-stats">
+                <div class="exam-stat">
+                    <strong>{{ exam.exam_duration }}</strong>
+                    <span>Phút</span>
+                </div>
+                <div class="exam-stat">
+                    <strong>{{ exam.question_count }}</strong>
+                    <span>Câu hỏi</span>
+                </div>
+            </div>
+            <div class="exam-actions">
+                <button class="btn btn-primary btn-sm" onclick="window.location='/teacher/manage-students/{{ exam.exam_id }}'">
+                    <i class="fas fa-users"></i>
+                    Students
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="viewExamDetails('{{ exam.exam_id }}')">
+                    <i class="fas fa-eye"></i>
+                    Xem chi tiết
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="copyLink('{{ exam.exam_link }}')">
+                    <i class="fas fa-copy"></i>
+                    Copy Link
+                </button>
+                {% if exam.submissions_count == 0 %}
+                <button class="btn btn-outline btn-sm" onclick="window.location='/teacher/show/{{ exam.exam_id }}'">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="deleteExam('{{ exam.exam_id }}')">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-inbox"></i>
+    </div>
+    <h3>Chưa có đề thi nào</h3>
+    <p>Bắt đầu bằng cách tạo đề thi đầu tiên của bạn</p>
+    <button class="btn btn-primary" onclick="openCreateExamModal()">
+        <i class="fas fa-plus"></i>
+        Tạo đề thi đầu tiên
+    </button>
+</div>
+{% endif %}
+
+<!-- Exam Details Modal -->
+<div id="examDetailsModal" class="modal" style="display: none;">
+    <div class="modal-dialog" style="max-width: 900px; width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Chi tiết đề thi</h2>
+                <button class="close-btn" onclick="closeExamDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: var(--spacing-lg); max-height: 70vh; overflow-y: auto;">
+                <div id="examDetailsContent">
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary);"></i>
+                        <p style="margin-top: 16px; color: var(--text-light);">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Exam Modal -->
+<div id="createExamModal" class="modal" style="display: none;">
+    <div class="modal-dialog" style="max-width: 98%; width: 1400px; max-height: 95vh; overflow-y: auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Tạo đề thi mới</h2>
+                <button class="close-btn" onclick="closeCreateExamModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="overflow: hidden;">
+                <iframe id="examFormIframe" 
+                        src="/teacher/tr_createxm?modal=1" 
+                        style="width: 100%; min-height: 600px; border: none;"
+                        onload="resizeIframe()"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+function openCreateExamModal() {
+    document.getElementById('createExamModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCreateExamModal() {
+    document.getElementById('createExamModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    location.reload();
+}
+
+function resizeIframe() {
+    const iframe = document.getElementById('examFormIframe');
+    try {
+        if (iframe.contentWindow.document.body) {
+            const height = iframe.contentWindow.document.body.scrollHeight;
+            iframe.style.height = height + 'px';
+        }
+    } catch (e) {
+        console.log('Waiting for iframe height via postMessage');
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const createModal = document.getElementById('createExamModal');
+    const detailsModal = document.getElementById('examDetailsModal');
+    
+    if (e.target === createModal) {
+        closeCreateExamModal();
+    }
+    if (e.target === detailsModal) {
+        closeExamDetailsModal();
+    }
+});
+
+window.addEventListener('message', function(e) {
+    if (e.data === 'examCreated' || e.data === 'closeModal') {
+        closeCreateExamModal();
+    } else if (e.data && e.data.type === 'iframeHeight') {
+        const iframe = document.getElementById('examFormIframe');
+        if (iframe && e.data.height) {
+            const maxHeight = window.innerHeight * 0.9;
+            const newHeight = Math.min(e.data.height, maxHeight);
+            iframe.style.height = newHeight + 'px';
+        }
+    }
+});
+
+function copyLink(link) {
+    const fullLink = window.location.origin + link;
+    navigator.clipboard.writeText(fullLink).then(() => {
+        showToast('Link đã được copy vào clipboard!', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showToast('Không thể copy link', 'error');
+    });
+}
+
+function viewExamDetails(examId) {
+    const modal = document.getElementById('examDetailsModal');
+    const content = document.getElementById('examDetailsContent');
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    fetch(`/teacher/exam-details/${examId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayExamDetails(data.exam);
+            } else {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--danger);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <p>${data.message || 'Không thể tải thông tin đề thi'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--danger);">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                    <p>Có lỗi xảy ra khi tải thông tin đề thi</p>
+                </div>
+            `;
+        });
+}
+
+function closeExamDetailsModal() {
+    document.getElementById('examDetailsModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function displayExamDetails(exam) {
+    const content = document.getElementById('examDetailsContent');
+    
+    let questionsHtml = '';
+    exam.questions.forEach((q, index) => {
+        let questionContent = `
+            <div style="background: var(--bg-tertiary); padding: 20px; border-radius: var(--radius-md); margin-bottom: 16px; border-left: 4px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <h4 style="margin: 0; color: var(--primary);">Câu ${index + 1}</h4>
+                    <span style="background: var(--primary); color: white; padding: 4px 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;">
+                        ${q.marks} điểm
+                    </span>
+                </div>
+                <p style="margin: 12px 0; white-space: pre-wrap; line-height: 1.6;">${q.question_text}</p>
+        `;
+        
+        if (q.question_image) {
+            questionContent += `
+                <div style="margin: 12px 0;">
+                    <img src="data:image/jpeg;base64,${q.question_image}" 
+                         style="max-width: 100%; max-height: 300px; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);" 
+                         alt="Question image">
+                </div>
+            `;
+        }
+        
+        if (q.exam_type === 'objective' && q.options_list && q.options_list.length > 0) {
+            questionContent += '<div style="margin-top: 16px;"><strong>Các lựa chọn:</strong><ul style="margin: 8px 0; padding-left: 24px;">';
+            q.options_list.forEach((opt, optIndex) => {
+                const isCorrect = q.correct_answer && parseInt(q.correct_answer) === (optIndex + 1);
+                const optionStyle = isCorrect ? 
+                    'background: #d1fae5; color: #065f46; padding: 8px 12px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 4px 0;' : 
+                    'padding: 8px 0; margin: 4px 0;';
+                const icon = isCorrect ? '<i class="fas fa-check-circle" style="color: #10b981; margin-right: 6px;"></i>' : '';
+                questionContent += `<li style="${optionStyle}">${icon}<strong>${String.fromCharCode(65 + optIndex)}.</strong> ${opt}</li>`;
+            });
+            questionContent += '</ul></div>';
+        } else if (q.exam_type === 'subjective') {
+            questionContent += '<div style="margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 6px; color: #92400e;"><i class="fas fa-pen" style="margin-right: 8px;"></i>Câu hỏi tự luận</div>';
+        }
+        
+        questionContent += '</div>';
+        questionsHtml += questionContent;
+    });
+    
+    content.innerHTML = `
+        <div style="margin-bottom: 24px;">
+            <h3 style="color: var(--text-primary); margin-bottom: 16px; font-size: 24px;">${exam.exam_title}</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 20px 0; padding: 20px; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                <div style="text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${exam.exam_duration}</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Phút</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${exam.questions.length}</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Câu hỏi</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${exam.exam_date || 'N/A'}</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Ngày thi</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${exam.exam_time || 'N/A'}</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Giờ thi</div>
+                </div>
+            </div>
+            ${exam.exam_rules ? `
+                <div style="margin: 20px 0; padding: 16px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: var(--radius-md);">
+                    <h4 style="margin: 0 0 8px 0; color: #92400e;"><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>Quy định</h4>
+                    <p style="margin: 0; white-space: pre-wrap; line-height: 1.6; color: #78350f;">${exam.exam_rules}</p>
+                </div>
+            ` : ''}
+            ${exam.exam_link ? `
+                <div style="margin: 20px 0; padding: 16px; background: #dbeafe; border-left: 4px solid #3b82f6; border-radius: var(--radius-md);">
+                    <h4 style="margin: 0 0 8px 0; color: #1e40af;"><i class="fas fa-link" style="margin-right: 8px;"></i>Link đề thi</h4>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <code style="flex: 1; padding: 8px 12px; background: white; border-radius: 6px; overflow-x: auto;">${window.location.origin}${exam.exam_link}</code>
+                        <button onclick="copyLink('${exam.exam_link}')" class="btn btn-primary btn-sm">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+        
+        <div>
+            <h4 style="color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-list-ol"></i> Danh sách câu hỏi
+            </h4>
+            ${questionsHtml}
+        </div>
+    `;
+}
+
+async function deleteExam(examId) {
+    const confirmed = await showConfirm(
+        'Đề thi sẽ bị xóa vĩnh viễn và không thể khôi phục.',
+        'Xóa đề thi?',
+        { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' }
+    );
+    
+    if (confirmed) {
+        fetch(`/teacher/delete_exam/${examId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Đã xóa đề thi thành công', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Lỗi: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Có lỗi xảy ra khi xóa đề thi', 'error');
+        });
+    }
+}
+
+// Search and filter functionality
+function filterExams() {
+    const searchText = document.getElementById('examSearch').value.toLowerCase();
+    const cards = document.querySelectorAll('.exam-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const title = card.getAttribute('data-title');
+        if (title.includes(searchText)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    updateExamCount(visibleCount);
+}
+
+function filterByStatus(status) {
+    // Update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.closest('.filter-btn').classList.add('active');
+    
+    const cards = document.querySelectorAll('.exam-card');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const dateStr = card.getAttribute('data-date');
+        const examDate = new Date(dateStr);
+        examDate.setHours(0, 0, 0, 0);
+        
+        let show = false;
+        if (status === 'all') {
+            show = true;
+        } else if (status === 'upcoming') {
+            show = examDate >= today;
+        } else if (status === 'past') {
+            show = examDate < today;
+        }
+        
+        if (show) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    updateExamCount(visibleCount);
+    // Clear search when filtering
+    document.getElementById('examSearch').value = '';
+}
+
+function sortExams() {
+    const grid = document.getElementById('examsGrid');
+    const cards = Array.from(document.querySelectorAll('.exam-card'));
+    const sortBy = document.getElementById('sortSelect').value;
+    
+    cards.sort((a, b) => {
+        if (sortBy === 'newest') {
+            return new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date'));
+        } else if (sortBy === 'oldest') {
+            return new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date'));
+        } else if (sortBy === 'title') {
+            return a.getAttribute('data-title').localeCompare(b.getAttribute('data-title'));
+        } else if (sortBy === 'duration') {
+            return parseInt(b.getAttribute('data-duration')) - parseInt(a.getAttribute('data-duration'));
+        }
+    });
+    
+    // Re-append cards in sorted order
+    cards.forEach(card => grid.appendChild(card));
+}
+
+function updateExamCount(count) {
+    const countElement = document.getElementById('examCount');
+    if (countElement) {
+        countElement.textContent = count;
+    }
+}
+</script>
+{% endblock %}

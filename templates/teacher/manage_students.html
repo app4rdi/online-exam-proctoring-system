@@ -1,0 +1,509 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Manage Students - {{ exam.exam_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage-students.css') }}">
+{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('exams') }}
+{% endblock %}
+
+{% block topbar_title %}Manage Students{% endblock %}
+{% block topbar_icon %}<i class="fas fa-users"></i>{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('teacher.get_exam_details', exam_id=exam.exam_id) }}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i>
+    Back to Exam
+</a>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Hidden data for JavaScript -->
+<div id="pageData" 
+     data-exam-id="{{ exam.exam_id }}" 
+     data-available-count="{{ available_students|length }}"
+     data-available-ids="{{ available_students|map(attribute='user_id')|list|tojson }}"
+     style="display: none;"></div>
+
+<!-- Exam Info Header -->
+<div class="exam-info-header">
+    <div class="exam-info-main">
+        <h2>{{ exam.exam_title }}</h2>
+        <div class="exam-meta">
+            <span><i class="fas fa-calendar"></i> {{ exam.exam_date.strftime('%B %d, %Y') if exam.exam_date else 'Not Set' }}</span>
+            <span><i class="fas fa-clock"></i> {{ (exam.exam_time|string)[0:5] if exam.exam_time else 'Not Set' }}</span>
+            <span><i class="fas fa-hourglass-half"></i> {{ exam.exam_duration }} minutes</span>
+            <span><i class="fas fa-question-circle"></i> {{ exam.question_count }} questions</span>
+        </div>
+    </div>
+    <div class="exam-stats">
+        <div class="stat-item">
+            <div class="stat-value">{{ assigned_students|length }}</div>
+            <div class="stat-label">Assigned Students</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ assigned_students|selectattr('has_taken', 'equalto', 1)|list|length }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Section -->
+<div class="action-section">
+    <button class="btn btn-primary" id="addStudentBtn">
+        <i class="fas fa-user-plus"></i>
+        Add Students
+    </button>
+    <button class="btn btn-secondary" id="addAllStudentsBtn">
+        <i class="fas fa-users"></i>
+        Add All Available ({{ available_students|length }})
+    </button>
+</div>
+
+<!-- Assigned Students Table -->
+<div class="content-card">
+    <div class="card-header" style="column-gap: 20px;">
+        <h3><i class="fas fa-users-cog"></i> Assigned Students</h3>
+        <div class="search-box">
+            <input type="text" id="searchAssigned" placeholder="Search students..." class="form-control">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+    
+    {% if assigned_students %}
+    <div class="table-responsive">
+        <table class="data-table" id="assignedTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Status</th>
+                    <th>Assigned Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in assigned_students %}
+                <tr data-student-id="{{ student.student_id }}">
+                    <td>
+                        <div class="student-name">
+                            <div class="avatar">{{ student.fullname[0]|upper }}</div>
+                            <span>{{ student.fullname }}</span>
+                        </div>
+                    </td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.username }}</td>
+                    <td>
+                        {% if student.has_taken %}
+                            <span class="status-badge completed">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                            <small class="text-muted d-block">{{ student.taken_at.strftime('%b %d, %Y %I:%M %p') if student.taken_at else '' }}</small>
+                        {% else %}
+                            <span class="status-badge pending">
+                                <i class="fas fa-clock"></i> Not Taken
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ student.assigned_at.strftime('%b %d, %Y') if student.assigned_at else 'N/A' }}</td>
+                    <td>
+                        {% if not student.has_taken %}
+                        <button class="btn btn-sm btn-danger remove-student-btn" data-assignment-id="{{ student.id }}" data-student-name="{{ student.fullname }}">
+                            <i class="fas fa-user-minus"></i>
+                            Remove
+                        </button>
+                        {% else %}
+                        <span class="text-muted">Cannot remove</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-user-slash"></i>
+        <h4>No Students Assigned Yet</h4>
+        <p>Click "Add Students" to assign students to this exam</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Students Modal -->
+<div id="addStudentsModal" class="modal">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Add Students to Exam</h3>
+            <button class="modal-close" onclick="closeModal('addStudentsModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            {% if available_students %}
+            <div class="search-box mb-3">
+                <input type="text" id="searchAvailable" placeholder="Search available students..." class="form-control">
+                <i class="fas fa-search"></i>
+            </div>
+            
+            <div class="student-selection-list" id="availableStudentsList">
+                {% for student in available_students %}
+                <div class="student-selection-item" data-student-name="{{ student.fullname|lower }}">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="selected_students" value="{{ student.user_id }}" class="student-checkbox">
+                        <div class="student-info">
+                            <div class="avatar">{{ student.fullname[0]|upper }}</div>
+                            <div class="student-details">
+                                <div class="student-name">{{ student.fullname }}</div>
+                                <div class="student-meta">{{ student.email }} • {{ student.username }}</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="selection-actions">
+                <button type="button" class="btn btn-outline" onclick="selectAllStudents()">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button type="button" class="btn btn-outline" onclick="deselectAllStudents()">
+                    <i class="fas fa-square"></i> Deselect All
+                </button>
+                <span id="selectedCount" class="selected-count">0 selected</span>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h4>No Available Students</h4>
+                <p>All students have been assigned to this exam</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('addStudentsModal')">Cancel</button>
+            {% if available_students %}
+            <button class="btn btn-primary" id="confirmAddStudents">
+                <i class="fas fa-plus"></i>
+                Add Selected Students
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Toast Notification Styles */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.toast {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(450px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border-left: 4px solid;
+    min-width: 300px;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-left-color: #10b981;
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast.info {
+    border-left-color: #3b82f6;
+}
+
+.toast.warning {
+    border-left-color: #f59e0b;
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+.toast.success .toast-icon {
+    background: #d1fae5;
+    color: #10b981;
+}
+
+.toast.error .toast-icon {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.toast.info .toast-icon {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.toast.warning .toast-icon {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-message {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    line-height: 1.4;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+@media (max-width: 768px) {
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .toast {
+        min-width: auto;
+    }
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+// Get data from HTML data attributes
+const pageData = document.getElementById('pageData');
+const examId = parseInt(pageData.dataset.examId);
+const availableCount = parseInt(pageData.dataset.availableCount);
+const availableIds = JSON.parse(pageData.dataset.availableIds);
+
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// Add student button
+document.getElementById('addStudentBtn')?.addEventListener('click', () => {
+    openModal('addStudentsModal');
+});
+
+// Search functionality for assigned students
+document.getElementById('searchAssigned')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#assignedTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Search functionality for available students
+document.getElementById('searchAvailable')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const items = document.querySelectorAll('.student-selection-item');
+    
+    items.forEach(item => {
+        const studentName = item.dataset.studentName;
+        item.style.display = studentName.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Update selected count
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.student-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = `${checked} selected`;
+}
+
+document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCount);
+});
+
+// Select/Deselect all
+function selectAllStudents() {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.student-selection-item'))
+        .filter(item => item.style.display !== 'none')
+        .map(item => item.querySelector('.student-checkbox'));
+    
+    visibleCheckboxes.forEach(cb => cb.checked = true);
+    updateSelectedCount();
+}
+
+function deselectAllStudents() {
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+    updateSelectedCount();
+}
+
+// Add selected students
+document.getElementById('confirmAddStudents')?.addEventListener('click', async () => {
+    const selectedIds = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+        .map(cb => parseInt(cb.value));
+    
+    if (selectedIds.length === 0) {
+        showToast('Please select at least one student', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/teacher/api/assign-multiple-students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exam_id: examId,
+                student_ids: selectedIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Error: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showToast('Error adding students: ' + error.message, 'error');
+    }
+});
+
+// Add all available students
+document.getElementById('addAllStudentsBtn')?.addEventListener('click', async () => {
+    if (availableCount === 0) {
+        showToast('No available students to add', 'info');
+        return;
+    }
+    
+    const confirmed = await showConfirm(
+        `Tất cả ${availableCount} sinh viên khả dụng sẽ được thêm vào đề thi này.`,
+        'Thêm tất cả sinh viên?',
+        { type: 'info', confirmText: 'Thêm', cancelText: 'Hủy' }
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/teacher/api/assign-multiple-students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exam_id: examId,
+                student_ids: availableIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Error: ' + data.message, 'error');
+        }
+    } catch (error) {
+        showToast('Error adding students: ' + error.message, 'error');
+    }
+});
+
+// Remove student
+document.querySelectorAll('.remove-student-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const assignmentId = this.dataset.assignmentId;
+        const studentName = this.dataset.studentName;
+        
+        const confirmed = await showConfirm(
+            `Sinh viên ${studentName} sẽ bị gỡ khỏi đề thi này.`,
+            'Gỡ sinh viên?',
+            { type: 'danger', confirmText: 'Gỡ', cancelText: 'Hủy' }
+        );
+        
+        if (!confirmed) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/teacher/api/remove-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignment_id: assignmentId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Error: ' + data.message, 'error');
+            }
+        } catch (error) {
+            showToast('Error removing student: ' + error.message, 'error');
+        }
+    });
+});
+</script>
+
+{% endblock %}

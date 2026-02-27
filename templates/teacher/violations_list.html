@@ -1,0 +1,168 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Vi Phạm - Tổng Hợp{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('violations') }}
+{% endblock %}
+
+{% block page_content %}
+
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+        Quản Lý Vi Phạm
+    </h1>
+</div>
+
+<!-- Statistics Cards -->
+{% if stats %}
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; opacity: 0.9;"></i>
+            <div>
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">{{ stats.total or 0 }}</div>
+                <div style="opacity: 0.9;">Tổng Vi Phạm</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <i class="fas fa-users" style="font-size: 2.5rem; opacity: 0.9;"></i>
+            <div>
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">{{ stats.unique_students or 0 }}</div>
+                <div style="opacity: 0.9;">Sinh Viên Vi Phạm</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <i class="fas fa-file-alt" style="font-size: 2.5rem; opacity: 0.9;"></i>
+            <div>
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">{{ stats.exams_with_violations or 0 }}</div>
+                <div style="opacity: 0.9;">Đề Thi Có Vi Phạm</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Violations Table -->
+<div class="content-card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">
+            <i class="fas fa-list"></i> Danh Sách Vi Phạm Theo Sinh Viên & Bài Thi
+        </h3>
+    </div>
+
+    {% if violations_summary %}
+    <div class="table-responsive">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Sinh Viên</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Đề Thi</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: #475569;">Số Vi Phạm</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Loại Vi Phạm</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Lần Đầu</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Lần Cuối</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: #475569;">Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in violations_summary %}
+                <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-user-circle" style="color: #64748b;"></i>
+                            <strong>{{ item.student_name }}</strong>
+                        </div>
+                    </td>
+                    <td style="padding: 0.5rem;">
+                        <div style="color: #475569;">{{ item.exam_title }}</div>
+                    </td>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        <span style="background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem;">
+                            {{ item.total_violations }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                            {% for vtype in item.violation_types.split(',')[:3] %}
+                            <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
+                                {{ vtype }}
+                            </span>
+                            {% endfor %}
+                            {% if item.violation_types.split(',')|length > 3 %}
+                            <span style="color: #64748b; font-size: 0.75rem;">+{{ item.violation_types.split(',')|length - 3 }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="padding: 0.5rem;">
+                        <div style="font-size: 0.875rem; color: #64748b;">
+                            <i class="far fa-clock"></i>
+                            {{ item.first_violation.strftime('%d/%m/%Y %H:%M') }}
+                        </div>
+                    </td>
+                    <td style="padding: 0.5rem;">
+                        <div style="font-size: 0.875rem; color: #64748b;">
+                            <i class="far fa-clock"></i>
+                            {{ item.latest_violation.strftime('%d/%m/%Y %H:%M') }}
+                        </div>
+                    </td>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        <a href="{{ url_for('teacher.violations_detail', user_id=item.user_id, exam_id=item.exam_id) }}" 
+                           class="btn-action"
+                           style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.3s;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <i class="fas fa-eye"></i>
+                            Xem Chi Tiết
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: #64748b;">
+        <i class="fas fa-check-circle" style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom: 0.5rem; color: #475569;">Không Có Vi Phạm</h3>
+        <p>Chưa có vi phạm nào được ghi nhận trong các kỳ thi của bạn.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.content-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    min-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+{% endblock %}

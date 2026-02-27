@@ -1,0 +1,328 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Manage Teachers - Admin{% endblock %}
+
+{% from 'admin/_menu_macros.html' import admin_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ admin_sidebar_menu('teachers') }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-user-management.css') }}">
+{% endblock %}
+
+{% block topbar_title %}Manage Teachers{% endblock %}
+{% block topbar_icon %}<i class="fas fa-chalkboard-teacher"></i>{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openAddModal()">
+    <i class="fas fa-plus"></i>
+    Add Teacher
+</button>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats Cards -->
+<div class="stats-cards">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ teachers|length }}</h3>
+            <p>Total Teachers</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ teachers|sum(attribute='exam_count') }}</h3>
+            <p>Total Exams Created</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ teachers|selectattr('exam_count', 'greaterthan', 0)|list|length }}</h3>
+            <p>Active Teachers</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search teachers by name, email, or username...">
+        <i class="fas fa-search"></i>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="users-table-container">
+    <div class="table-header">
+        <h3>All Teachers</h3>
+    </div>
+    
+    {% if teachers %}
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Email</th>
+                <th>Contact</th>
+                <th>Exams Created</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="teachersTable">
+            {% for teacher in teachers %}
+            <tr data-search="{{ teacher.fullname|lower }} {{ teacher.email|lower }} {{ teacher.username|lower }}">
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {% if teacher.profile_image_base64 %}
+                                <img src="data:image/jpeg;base64,{{ teacher.profile_image_base64 }}" alt="{{ teacher.fullname }}">
+                            {% else %}
+                                {{ teacher.fullname[0]|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ teacher.fullname }}</div>
+                            <div class="user-username">@{{ teacher.username }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ teacher.email }}</td>
+                <td>{{ teacher.contact or 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if teacher.exam_count > 0 %}success{% else %}warning{% endif %}">
+                        {{ teacher.exam_count }} exams
+                    </span>
+                </td>
+                <td>{{ teacher.created_at.strftime('%Y-%m-%d') if teacher.created_at else 'N/A' }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon edit" 
+                                data-authority-id="{{ teacher.authority_id }}" 
+                                data-fullname="{{ teacher.fullname }}" 
+                                data-email="{{ teacher.email }}" 
+                                data-contact="{{ teacher.contact or '' }}" 
+                                onclick="openEditModalTeacher(this)" 
+                                title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon reset" 
+                                data-authority-id="{{ teacher.authority_id }}" 
+                                data-fullname="{{ teacher.fullname }}" 
+                                onclick="openResetModalTeacher(this)" 
+                                title="Reset Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="btn-icon delete" 
+                                data-authority-id="{{ teacher.authority_id }}" 
+                                data-fullname="{{ teacher.fullname }}" 
+                                data-exam-count="{{ teacher.exam_count }}" 
+                                onclick="confirmDeleteTeacher(this)" 
+                                title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h4>No Teachers Found</h4>
+        <p>Click "Add Teacher" to create the first teacher account.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Teacher Modal -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> Add New Teacher</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.add_teacher') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="add_fullname">Full Name *</label>
+                    <input type="text" id="add_fullname" name="fullname" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_email">Email *</label>
+                    <input type="email" id="add_email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_username">Username *</label>
+                    <input type="text" id="add_username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_contact">Contact</label>
+                    <input type="text" id="add_contact" name="contact">
+                </div>
+                <div class="form-group">
+                    <label for="add_password">Password *</label>
+                    <input type="password" id="add_password" name="password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Teacher</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Teacher Modal -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Edit Teacher</h3>
+            <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form method="POST" id="editForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_fullname">Full Name *</label>
+                    <input type="text" id="edit_fullname" name="fullname" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_email">Email *</label>
+                    <input type="email" id="edit_email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_contact">Contact</label>
+                    <input type="text" id="edit_contact" name="contact">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Teacher</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal" id="resetModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-key"></i> Reset Password</h3>
+            <button class="modal-close" onclick="closeModal('resetModal')">&times;</button>
+        </div>
+        <form method="POST" id="resetForm">
+            <div class="modal-body">
+                <p>Reset password for <strong id="resetUserName"></strong>?</p>
+                <div class="form-group">
+                    <label for="new_password">New Password *</label>
+                    <input type="password" id="new_password" name="new_password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('resetModal')">Cancel</button>
+                <button type="submit" class="btn btn-warning">Reset Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+function openAddModal() {
+    openModal('addModal');
+}
+
+function openEditModalTeacher(button) {
+    const authorityId = button.dataset.authorityId;
+    const fullname = button.dataset.fullname;
+    const email = button.dataset.email;
+    const contact = button.dataset.contact;
+    
+    document.getElementById('edit_fullname').value = fullname;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_contact').value = contact;
+    document.getElementById('editForm').action = `/admin/edit-teacher/${authorityId}`;
+    openModal('editModal');
+}
+
+function openResetModalTeacher(button) {
+    const authorityId = button.dataset.authorityId;
+    const userName = button.dataset.fullname;
+    
+    document.getElementById('resetUserName').textContent = userName;
+    document.getElementById('resetForm').action = `/admin/reset-password/teacher/${authorityId}`;
+    openModal('resetModal');
+}
+
+async function confirmDeleteTeacher(button) {
+    const authorityId = button.dataset.authorityId;
+    const userName = button.dataset.fullname;
+    const examCount = parseInt(button.dataset.examCount);
+    
+    if (examCount > 0) {
+        showToast(`Cannot delete teacher "${userName}" because they have ${examCount} existing exams. Please delete their exams first.`, 'warning', 6000);
+        return;
+    }
+    
+    const confirmed = await showConfirm(
+        `Teacher "${userName}" will be permanently deleted. This action cannot be undone.`,
+        'Delete Teacher?',
+        { type: 'danger', confirmText: 'Delete', cancelText: 'Cancel' }
+    );
+    
+    if (confirmed) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/delete-teacher/${authorityId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Search functionality
+document.getElementById('searchInput')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#teachersTable tr');
+    
+    rows.forEach(row => {
+        const searchText = row.getAttribute('data-search');
+        row.style.display = searchText.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Close modal on outside click
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal(modal.id);
+        }
+    });
+});
+</script>
+
+{% endblock %}

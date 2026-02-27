@@ -1,0 +1,418 @@
+/* ===================================================================
+   ADMIN COMMON STYLES
+   CSS for admin dashboard pages (adash.html, adash_new.html)
+   =================================================================== */
+
+/* Admin-specific CSS Variables */
+:root {
+    --primary-color: #1a365d;
+    --secondary-color: #2c5282;
+    --accent-color: #4299e1;
+    --background-light: #f8fafc;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-light);
+}
+
+/* ==================== SIDEBAR STYLES (adash.html) ==================== */
+
+.sidebar {
+    width: 280px;
+    background-color: #ffffff;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    /* padding-top: 30px; */
+    border-right: 1px solid #e2e8f0;
+}
+
+.sidebar .navbar {
+    padding: 0 24px;
+    margin-bottom: 40px;
+}
+
+.sidebar .navbar-brand {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.sidebar .navbar-brand span:first-child {
+    color: var(--primary-color);
+}
+
+.sidebar .navbar-brand span:last-child {
+    color: var(--accent-color);
+}
+
+/* Profile Section */
+.profile {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 0 20px;
+}
+
+.profile img {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+    margin-bottom: 16px;
+    transition: transform 0.2s ease;
+}
+
+.profile img:hover {
+    transform: scale(1.03);
+}
+
+.profile h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.profile p {
+    margin: 8px 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* Menu Items */
+.menu {
+    padding: 0 16px;
+    flex-grow: 1;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    background-color: #f7fafc;
+    color: var(--accent-color);
+}
+
+.menu-item.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.menu-item i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Logout Button */
+.logout {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #f56565;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #e53e3e;
+}
+
+/* Main Content Area */
+.main-content {
+    margin-left: 280px;
+    padding: 40px;
+    min-height: 100vh;
+}
+
+.header {
+    margin-bottom: 32px;
+}
+
+.header h1 {
+    font-size: 2rem;
+    color: var(--text-dark);
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+
+.header p {
+    color: var(--text-light);
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* ==================== COMPLAINTS SECTION (adash_new.html) ==================== */
+
+.welcome-section {
+    background: var(--gradient-multi);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.welcome-section h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-sm);
+}
+
+.welcome-section p {
+    font-size: var(--font-size-lg);
+    opacity: 0.9;
+}
+
+.complaints-section {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: var(--spacing-xl);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.complaint-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    transition: all var(--transition-base);
+}
+
+.complaint-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+}
+
+.complaint-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.complaint-id {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+}
+
+.complaint-status {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+}
+
+.complaint-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.complaint-status.resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.complaint-status.in-progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.complaint-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info h4 {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+
+.user-info p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.complaint-message {
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+}
+
+.complaint-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.complaint-date {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.complaint-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-view {
+    padding: 6px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-view:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-resolve {
+    padding: 6px 16px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-resolve:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.3;
+}
+
+.empty-state h4 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .main-content {
+        margin-left: 240px;
+        padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+        z-index: 1000;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .complaint-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .complaint-footer {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+}

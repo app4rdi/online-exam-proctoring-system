@@ -1,0 +1,31 @@
+{# Admin Sidebar Menu Macros #}
+
+{% macro admin_sidebar_menu(active_page='') %}
+<div class="menu-section">
+    <div class="menu-section-title">Quản trị</div>
+    <a href="/admin/adash" class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-home"></i>
+        <span>Bảng điều khiển</span>
+    </a>
+    <a href="/admin/database" class="menu-item {% if active_page == 'database' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-database"></i>
+        <span>Cơ sở dữ liệu</span>
+    </a>
+    <a href="{{ url_for('admin.manage_students') }}" class="menu-item {% if active_page == 'students' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-user-graduate"></i>
+        <span>Quản lý sinh viên</span>
+    </a>
+    <a href="{{ url_for('admin.manage_teachers') }}" class="menu-item {% if active_page == 'teachers' %}active{% endif %}">
+        <i class="menu-item-icon fas fa-chalkboard-teacher"></i>
+        <span>Quản lý giáo viên</span>
+    </a>
+</div>
+
+<div class="menu-section">
+    <div class="menu-section-title">Hệ thống</div>
+    <a href="/logout" class="menu-item">
+        <i class="menu-item-icon fas fa-sign-out-alt"></i>
+        <span>Đăng xuất</span>
+    </a>
+</div>
+{% endmacro %}

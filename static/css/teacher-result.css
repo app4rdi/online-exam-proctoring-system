@@ -1,0 +1,63 @@
+/* Teacher Result Page Styles */
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.result-table th,
+.result-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.result-table th {
+    background-color: #f0f5ff;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.result-table tr:hover {
+    background-color: #f9fbff;
+}
+
+.result-table td {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.result-table tr:last-child td {
+    border-bottom: none;
+}
+
+.result-table td a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.result-table td a:hover {
+    text-decoration: underline;
+}
+
+.no-results {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.status-passed {
+    color: #38a169;
+    font-weight: 600;
+}
+
+.status-failed {
+    color: #e53e3e;
+    font-weight: 600;
+}

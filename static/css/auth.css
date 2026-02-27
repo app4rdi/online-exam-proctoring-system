@@ -1,0 +1,184 @@
+/* ===================================================================
+   AUTH PAGES STYLES
+   CSS for authentication pages (signup, login, forgot/reset password)
+   =================================================================== */
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f9ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Navbar on Auth Pages */
+.navbar {
+    position: absolute;
+    top: 30px;
+    left: 90px;
+}
+
+.navbar-brand {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-left: -1cm;
+    text-decoration: none;
+}
+
+.navbar-brand span:first-child {
+    color: #0c447b;
+}
+
+.navbar-brand span:last-child {
+    color: #4a90e2;
+}
+
+/* Signup Container */
+.signup-container {
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 30px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.signup-container h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin-bottom: 20px;
+}
+
+.signup-container form {
+    display: flex;
+    flex-direction: column;
+}
+
+.signup-container label {
+    font-size: 14px;
+    color: #2b2b2b;
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.signup-container input {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.signup-container input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+.signup-container input[type="file"] {
+    padding: 5px;
+    border: none;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+.signup-container button {
+    padding: 10px 15px;
+    background-color: #4a90e2;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.signup-container button:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+}
+
+.signup-container button:active {
+    transform: translateY(0);
+}
+
+.signup-container .login-link {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.signup-container .login-link a {
+    color: #4a90e2;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.signup-container .login-link a:hover {
+    text-decoration: underline;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .navbar {
+        position: static;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .navbar-brand {
+        margin-left: 0;
+    }
+
+    .signup-container {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .signup-container h1 {
+        font-size: 20px;
+    }
+
+    body {
+        padding: 20px;
+    }
+}

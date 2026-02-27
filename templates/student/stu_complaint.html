@@ -1,0 +1,69 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Support Center - ProctorEdu{% endblock %}
+
+{% from 'student/_menu_macros.html' import student_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ student_sidebar_menu('complaints') }}
+{% endblock %}
+
+{% block topbar_title %}Support Center{% endblock %}
+{% block topbar_icon %}<i class="fas fa-comment-dots"></i>{% endblock %}
+
+{% block page_content %}
+
+<div class="complaint-form-card">
+    <h2><i class="fas fa-edit"></i> Submit New Query</h2>
+    <form class="complaint-form" action="/submit_complaint" method="POST">
+        <textarea 
+            name="complaint_text" 
+            placeholder="Describe your issue in detail. We're here to help!"
+            required
+        ></textarea>
+        <input type="hidden" name="user_id" value="{{ session.get('user_id') }}">
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-paper-plane"></i> Submit Query
+        </button>
+    </form>
+</div>
+
+<div class="complaints-section">
+    <h2><i class="fas fa-history"></i> Previous Inquiries</h2>
+    
+    {% if complaints %}
+        {% for complaint in complaints %}
+        <div class="complaint-card">
+            <div class="complaint-header">
+                <span class="complaint-date">
+                    <i class="fas fa-calendar"></i> {{ complaint['submission_time'] }}
+                </span>
+                <span class="status-badge status-{{ complaint['status'].lower().replace(' ', '-') }}">
+                    {{ complaint['status']|capitalize }}
+                </span>
+            </div>
+            <p class="complaint-text">{{ complaint['complaint_text'] }}</p>
+            
+            {% if complaint['reply_text'] %}
+            <div class="reply-section">
+                <div class="reply-header">
+                    <i class="fas fa-comment-check"></i>
+                    <span>Official Response</span>
+                </div>
+                <p class="reply-text">{{ complaint['reply_text'] }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No inquiries yet</p>
+            <small style="color: var(--text-light);">Your submitted queries will appear here</small>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Exam Answers - ProctorEdu{% endblock %}
+
+{% from 'student/_menu_macros.html' import student_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ student_sidebar_menu('answers') }}
+{% endblock %}
+
+{% block topbar_title %}Exam Performance Review{% endblock %}
+{% block topbar_icon %}<i class="fas fa-file-alt"></i>{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('student.stu_result') }}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Results
+</a>
+{% endblock %}
+
+{% block page_content %}
+
+{% if exam_title %}
+<div class="exam-title-card">
+    <h1><i class="fas fa-clipboard-check"></i> {{ exam_title }}</h1>
+</div>
+{% endif %}
+
+{% if answers %}
+    {% for answer in answers %}
+    <div class="question-card">
+        <div class="question-header">
+            <div class="question-number">
+                <div class="question-badge">{{ loop.index }}</div>
+                <h3 style="margin: 0;">Question {{ loop.index }}</h3>
+            </div>
+            <div class="marks-badge">
+                <i class="fas fa-star"></i> {{ answer.marks }} Mark{{ 's' if answer.marks > 1 }}
+            </div>
+        </div>
+        
+        <p class="question-text">{{ answer.question_text }}</p>
+        
+        {% if answer.question_image %}
+        <img src="data:image/jpeg;base64,{{ answer.question_image }}" class="question-image" alt="Question Image">
+        {% endif %}
+        
+        {% if answer.options %}
+        <div class="options-section">
+            <strong><i class="fas fa-list"></i> Options:</strong>
+            <ul>
+                {% for option in answer.options.split('\n') %}
+                    {% if option.strip() %}
+                    <li>{{ option.replace('•', '').strip() }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="answer-section">
+            <div class="answer-box your-answer">
+                <div class="answer-label your-answer">
+                    <i class="fas fa-user"></i> Your Answer
+                </div>
+                <div class="answer-value">{{ answer.answer or 'Not answered' }}</div>
+            </div>
+            <div class="answer-box correct-answer">
+                <div class="answer-label correct-answer">
+                    <i class="fas fa-check-circle"></i> Correct Answer
+                </div>
+                <div class="answer-value">{{ answer.correct_answer }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <p>No answers found</p>
+        <small style="color: var(--text-light);">Your exam answers will appear here</small>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer - Proctor System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        
+        .nav {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav button {
+            padding: 10px 20px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        }
+        .nav button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        .table-section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .table-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card h3 { font-size: 2.5em; margin-bottom: 10px; }
+        .stat-card p { opacity: 0.9; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ Database Viewer</h1>
+            <p>Online Exam Proctoring System - Database: {{ db_name }}</p>
+        </div>
+        
+        <div class="nav">
+            <button onclick="showTable('overview')" class="active">📊 Overview</button>
+            <button onclick="showTable('users')">👥 Users ({{ counts.users }})</button>
+            <button onclick="showTable('teachers')">👨‍🏫 Teachers ({{ counts.teachers }})</button>
+            <button onclick="showTable('exams')">📝 Exams ({{ counts.exams }})</button>
+            <button onclick="showTable('questions')">❓ Questions ({{ counts.questions }})</button>
+            <button onclick="showTable('results')">📈 Results ({{ counts.results }})</button>
+            <button onclick="showTable('violations')">⚠️ Violations ({{ counts.violations }})</button>
+        </div>
+        
+        <div class="content">
+            <!-- Overview -->
+            <div id="overview" class="table-section active">
+                <h2 style="margin-bottom: 20px;">📊 Database Overview</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>{{ counts.users }}</h3>
+                        <p>Students</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ counts.teachers }}</h3>
+                        <p>Teachers</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ counts.exams }}</h3>
+                        <p>Exams</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ counts.questions }}</h3>
+                        <p>Questions</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ counts.results }}</h3>
+                        <p>Results</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>{{ counts.violations }}</h3>
+                        <p>Violations</p>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">All Tables ({{ tables|length }})</h3>
+                <table>
+                    <tr>
+                        <th>#</th>
+                        <th>Table Name</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for table in tables %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ table }}</strong></td>
+                        <td><span class="badge badge-success">✓ Active</span></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            
+            <!-- Users -->
+            <div id="users" class="table-section">
+                <h2 style="margin-bottom: 20px;">👥 Students / Users</h2>
+                {% if data.users %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                        <th>Session</th>
+                    </tr>
+                    {% for user in data.users %}
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td><strong>{{ user[1] }}</strong></td>
+                        <td>{{ user[2] }}</td>
+                        <td>{{ user[3] }}</td>
+                        <td>{{ user[4] }}</td>
+                        <td>
+                            {% if user[5] %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-info">Offline</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No students in database</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Teachers -->
+            <div id="teachers" class="table-section">
+                <h2 style="margin-bottom: 20px;">👨‍🏫 Teachers / Exam Authority</h2>
+                {% if data.teachers %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                    </tr>
+                    {% for teacher in data.teachers %}
+                    <tr>
+                        <td>{{ teacher[0] }}</td>
+                        <td><strong>{{ teacher[1] }}</strong></td>
+                        <td>{{ teacher[2] }}</td>
+                        <td>{{ teacher[3] }}</td>
+                        <td>{{ teacher[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No teachers in database</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Exams -->
+            <div id="exams" class="table-section">
+                <h2 style="margin-bottom: 20px;">📝 Exams</h2>
+                {% if data.exams %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Authority ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Duration</th>
+                        <th>Created</th>
+                    </tr>
+                    {% for exam in data.exams %}
+                    <tr>
+                        <td>{{ exam[0] }}</td>
+                        <td><strong>{{ exam[1] }}</strong></td>
+                        <td>{{ exam[2] }}</td>
+                        <td>{{ exam[3] or 'N/A' }}</td>
+                        <td>{{ exam[4] or 'N/A' }}</td>
+                        <td>{{ exam[5] or 'N/A' }} min</td>
+                        <td>{{ exam[6] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No exams created yet</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Questions -->
+            <div id="questions" class="table-section">
+                <h2 style="margin-bottom: 20px;">❓ Questions</h2>
+                {% if data.questions %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Exam ID</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Question</th>
+                        <th>Marks</th>
+                    </tr>
+                    {% for q in data.questions %}
+                    <tr>
+                        <td>{{ q[0] }}</td>
+                        <td>{{ q[1] }}</td>
+                        <td>{{ q[2] }}</td>
+                        <td>
+                            {% if q[3] == 'objective' %}
+                            <span class="badge badge-info">Multiple Choice</span>
+                            {% else %}
+                            <span class="badge badge-warning">Essay</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ (q[4][:50] + '...') if q[4] and q[4]|length > 50 else (q[4] or 'Image question') }}</td>
+                        <td>{{ q[5] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No questions available</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Results -->
+            <div id="results" class="table-section">
+                <h2 style="margin-bottom: 20px;">📈 Student Results</h2>
+                {% if data.results %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Exam</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                    </tr>
+                    {% for r in data.results %}
+                    <tr>
+                        <td>{{ r[0] }}</td>
+                        <td><strong>{{ r[1] }}</strong></td>
+                        <td>{{ r[2] }}</td>
+                        <td><strong>{{ r[3] or 'Pending' }}</strong></td>
+                        <td>
+                            {% if r[4] == 'graded' %}
+                            <span class="badge badge-success">Graded</span>
+                            {% elif r[4] == 'pending' %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% else %}
+                            <span class="badge badge-info">{{ r[4] or 'N/A' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ r[5] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No exam results yet</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Violations -->
+            <div id="violations" class="table-section">
+                <h2 style="margin-bottom: 20px;">⚠️ Exam Violations</h2>
+                {% if data.violations %}
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Email</th>
+                        <th>Violation Type</th>
+                        <th>Face Count</th>
+                        <th>Timestamp</th>
+                    </tr>
+                    {% for v in data.violations %}
+                    <tr>
+                        <td>{{ v[0] }}</td>
+                        <td><strong>{{ v[1] }}</strong></td>
+                        <td>{{ v[2] }}</td>
+                        <td><span class="badge badge-danger">{{ v[3] }}</span></td>
+                        <td>{{ v[4] }}</td>
+                        <td>{{ v[5] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div class="empty">
+                    <p>No violations recorded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTable(tableName) {
+            // Hide all sections
+            document.querySelectorAll('.table-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(tableName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

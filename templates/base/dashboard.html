@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+
+{% block body_content %}
+<!-- Sidebar -->
+<aside class="sidebar {% if sidebar_gradient %}sidebar-gradient{% endif %}">
+    <!-- Brand Logo -->
+    <div class="sidebar-header">
+        <div class="brand-logo">
+            <!-- <span class="brand-text">Proctor Exam</span> -->
+             <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20512%20512%22%20role%3D%22img%22%20aria-label%3D%22AI%20based%20Online%20Exam%20Proctoring%20System%20icon%20(simple%20rectangle)%22%3E%0A%20%20%3C!--%20Background%20(rectangle%20icon)%20--%3E%0A%20%20%3Crect%20x%3D%2256%22%20y%3D%2256%22%20width%3D%22400%22%20height%3D%22400%22%20rx%3D%2240%22%20fill%3D%22%23111827%22%3E%3C%2Frect%3E%0A%20%20%3Crect%20x%3D%2272%22%20y%3D%2272%22%20width%3D%22368%22%20height%3D%22368%22%20rx%3D%2232%22%20fill%3D%22none%22%20stroke%3D%22%2322D3EE%22%20stroke-width%3D%2210%22%3E%3C%2Frect%3E%0A%0A%20%20%3C!--%20Simple%20camera%20%2B%20eye%20--%3E%0A%20%20%3Crect%20x%3D%22140%22%20y%3D%22170%22%20width%3D%22232%22%20height%3D%22160%22%20rx%3D%2222%22%20fill%3D%22none%22%20stroke%3D%22%23E5E7EB%22%20stroke-width%3D%2212%22%3E%3C%2Frect%3E%0A%20%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22250%22%20r%3D%2244%22%20fill%3D%22none%22%20stroke%3D%22%23E5E7EB%22%20stroke-width%3D%2212%22%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22250%22%20r%3D%2214%22%20fill%3D%22%23E5E7EB%22%3E%3C%2Fcircle%3E%0A%0A%20%20%3C!--%20Small%20AI%20nodes%20(minimal)%20--%3E%0A%20%20%3Ccircle%20cx%3D%22170%22%20cy%3D%22150%22%20r%3D%2210%22%20fill%3D%22%2322D3EE%22%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20cx%3D%22342%22%20cy%3D%22150%22%20r%3D%2210%22%20fill%3D%22%2322D3EE%22%3E%3C%2Fcircle%3E%0A%20%20%3Cpath%20d%3D%22M180%20156%20L204%20178%22%20stroke%3D%22%2322D3EE%22%20stroke-width%3D%2210%22%20stroke-linecap%3D%22round%22%3E%3C%2Fpath%3E%0A%20%20%3Cpath%20d%3D%22M332%20156%20L308%20178%22%20stroke%3D%22%2322D3EE%22%20stroke-width%3D%2210%22%20stroke-linecap%3D%22round%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20Check%20mark%20(integrity)%20--%3E%0A%20%20%3Cpath%20d%3D%22M222%20274%20L246%20298%20L300%20242%22%20fill%3D%22none%22%20stroke%3D%22%2322C55E%22%20stroke-width%3D%2214%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C%2Fpath%3E%0A%0A%20%20%3C!--%20Minimal%20label%20--%3E%0A%20%20%3Ctext%20x%3D%22256%22%20y%3D%22392%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2222%22%20fill%3D%22%23E5E7EB%22%3EAI%20PROCTOR%3C%2Ftext%3E%0A%3C%2Fsvg%3E" alt="Proctor Exam Based on AI" class="brand-image">
+        </div>
+    </div>
+    
+    <!-- Profile Section -->
+    {% if user %}
+    <div class="profile-section">
+        <img src="{{ user.avatar or 'https://ui-avatars.com/api/?name=' + user.name + '&background=6366f1&color=fff&size=80' }}" 
+             alt="{{ user.name }}" 
+             class="profile-avatar">
+        <div class="profile-name">{{ user.name }}</div>
+        <div class="profile-role">{{ user.role|capitalize }}</div>
+    </div>
+    {% endif %}
+    
+    <!-- Navigation Menu -->
+    <nav class="sidebar-menu">
+        {% block sidebar_menu %}
+        <!-- Menu will be customized by child templates -->
+        {% endblock %}
+    </nav>
+</aside>
+
+<!-- Main Content Area -->
+<main class="main-content with-topbar">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1 class="topbar-title">
+                {% block topbar_icon %}<i class="fas fa-home"></i>{% endblock %}
+                {% block topbar_title %}Dashboard{% endblock %}
+            </h1>
+        </div>
+        <div class="topbar-right">
+            {% block topbar_actions %}
+            <!-- Additional topbar actions -->
+            {% endblock %}
+        </div>
+    </div>
+    
+    <!-- Page Content -->
+    <div class="container">
+        {% block page_content %}
+        <!-- Page content goes here -->
+        {% endblock %}
+    </div>
+</main>
+{% endblock %}

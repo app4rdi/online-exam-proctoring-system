@@ -1,0 +1,32 @@
+ℹ️  DeepFace not installed. Face verification features will be limited.
+ℹ️  TensorFlow not installed. Some AI features may be limited.
+ℹ️  dlib not installed. Face landmark detection may be limited.
+ℹ️  face_recognition not installed. Face encoding features will be limited.
+
+📊 Database Configuration:
+   Host: localhost
+   User: root
+   Database: proctor
+   Password: (empty)
+
+✅ Blueprints registered successfully!
+   - auth_bp: Authentication
+   - student_bp: /student/*
+   - teacher_bp: /teacher/*
+   - admin_bp: /admin/*
+   - exam_bp: Exam routes
+   - api_bp: /api/*
+
+
+============================================================
+ 🎓 Online Exam Proctoring System - Modular Architecture
+============================================================
+ Database: proctor@localhost
+ Server: http://localhost:8080
+ Status: Running...
+============================================================
+
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 8080 is in use by another program. Either identify and stop that program, or start the server with a different port.

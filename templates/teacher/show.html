@@ -1,0 +1,170 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Exam Details - {{ exam_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exam-details.css') }}">
+{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('exams') }}
+{% endblock %}
+
+{% block topbar_title %}Exam Details{% endblock %}
+{% block topbar_icon %}<i class="fas fa-file-alt"></i>{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('teacher.manage_exam_students', exam_id=exam.exam_id) }}" class="btn btn-success">
+    <i class="fas fa-users"></i>
+    Manage Students
+</a>
+<button class="btn btn-outline" onclick="window.history.back()">
+    <i class="fas fa-arrow-left"></i>
+    Back
+</button>
+<button class="btn btn-primary" onclick="copyLink()">
+    <i class="fas fa-copy"></i>
+    Copy Exam Link
+</button>
+{% endblock %}
+
+{% block page_content %}
+<!-- Exam Info Card -->
+<div class="exam-info-card">
+    <div class="exam-info-header">
+        <h2 class="exam-title">{{ exam_title }}</h2>
+    </div>
+    
+    <div class="exam-meta-grid">
+        <div class="exam-meta-item">
+            <div class="exam-meta-icon">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <div class="exam-meta-content">
+                <strong>Date</strong>
+                <span>{{ exam_date }}</span>
+            </div>
+        </div>
+        
+        <div class="exam-meta-item">
+            <div class="exam-meta-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="exam-meta-content">
+                <strong>Time</strong>
+                <span>{% if exam_time %}{{ exam_time }}{% else %}N/A{% endif %}</span>
+            </div>
+        </div>
+        
+        <div class="exam-meta-item">
+            <div class="exam-meta-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="exam-meta-content">
+                <strong>Duration</strong>
+                <span>{{ exam_duration }} minutes</span>
+            </div>
+        </div>
+        
+        <div class="exam-meta-item">
+            <div class="exam-meta-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <div class="exam-meta-content">
+                <strong>Exam Link</strong>
+                <span id="exam-link-display">{{ exam_link }}</span>
+            </div>
+        </div>
+    </div>
+    
+    {% if exam_rules %}
+    <div class="exam-rules">
+        <h3><i class="fas fa-info-circle"></i> Exam Rules</h3>
+        <p>{{ exam_rules }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Questions List -->
+<div class="content-section">
+    <div class="section-header">
+        <h3 class="section-title">
+            <i class="fas fa-question-circle"></i>
+            Questions ({{ questions|length }})
+        </h3>
+    </div>
+    
+    {% if questions %}
+    <div class="question-list">
+        {% for question in questions %}
+        <div class="question-card">
+            <div class="question-header">
+                <span class="question-number">Question {{ loop.index }}</span>
+                <span class="question-marks">{{ question.marks }} marks</span>
+            </div>
+            
+            <div class="question-text">{{ question.question_text }}</div>
+            
+            {% if question.question_image %}
+            <img src="data:image/png;base64,{{ question.question_image }}" 
+                 alt="Question image" 
+                 class="question-image">
+            {% endif %}
+            
+            {% if question.exam_type == 'mcq' %}
+            <div class="options-list">
+                {% set options = question.options.split('~') %}
+                {% for option in options %}
+                <div class="option-item {% if loop.index == 1 %}correct{% endif %}">
+                    <strong>{{ ['A', 'B', 'C', 'D'][loop.index0] }}.</strong>
+                    {{ option }}
+                    {% if loop.index == 1 %}
+                    <i class="fas fa-check-circle" style="margin-left: auto;"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% elif question.exam_type == 'true-false' %}
+            <div class="options-list">
+                <div class="option-item correct">
+                    <i class="fas fa-check"></i> True (Correct Answer)
+                </div>
+                <div class="option-item">
+                    <i class="fas fa-times"></i> False
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-inbox"></i>
+        </div>
+        <h3>No questions found</h3>
+        <p>This exam doesn't have any questions yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+function copyLink() {
+    const examLink = '{{ exam_link }}';
+    const fullLink = window.location.origin + '/exam?exam_link=' + examLink;
+    
+    navigator.clipboard.writeText(fullLink).then(() => {
+        showToast('Exam link đã được copy vào clipboard!', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showToast('Không thể copy link', 'error');
+    });
+}
+</script>
+{% endblock %}

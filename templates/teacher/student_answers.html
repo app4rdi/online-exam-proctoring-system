@@ -1,0 +1,101 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Đánh giá bài thi - {{ fullname }} - ProctorEdu{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('results') }}
+{% endblock %}
+
+{% block topbar_title %}Đánh giá bài thi{% endblock %}
+{% block topbar_icon %}<i class="fas fa-clipboard-check"></i>{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('teacher_result') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Quay lại
+</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="form-container">
+    <div class="info-card" style="margin-bottom: var(--spacing-xl);">
+        <div class="info-card-header">
+            <h2 class="info-card-title">{{ exam_title }}</h2>
+            <p class="info-card-subtitle">Học viên: <strong>{{ fullname }}</strong></p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_marks') }}">
+        {% for answer in answers %}
+        <div class="question-card">
+            <div class="question-number">{{ loop.index }}</div>
+            <div class="question-content">
+                <div class="question-header">
+                    <h3 class="question-title">Câu {{ loop.index }}</h3>
+                    <span class="badge badge-info">{{ answer.marks }} điểm</span>
+                </div>
+                
+                <p class="question-text">{{ answer.question_text }}</p>
+                
+                {% if answer.question_image %}
+                <img src="data:image/jpeg;base64,{{ answer.question_image }}" class="question-image">
+                {% endif %}
+                
+                {% if answer.options %}
+                <div class="question-options">
+                    <strong>Các lựa chọn:</strong>
+                    <ul>
+                        {% for option in answer.options.split('\n') %}
+                            {% if option.strip() %}
+                            <li>{{ option.replace('•', '').strip() }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <div class="student-answer">
+                    <strong>Câu trả lời:</strong> {{ answer.answer }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="form-card" style="margin-top: var(--spacing-xl);">
+            <h3 style="margin-bottom: var(--spacing-lg);">Kết quả tổng thể</h3>
+            <div class="form-group">
+                <label class="form-label required" for="overall-status">Trạng thái</label>
+                <select id="overall-status" name="overall-status" class="form-select" required>
+                    <option value="passed">Đạt</option>
+                    <option value="failed">Không đạt</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label required" for="overall-mark">Tổng điểm</label>
+                <input type="number" id="overall-mark" name="overall-mark" 
+                       class="form-input" min="0" step="0.5" required 
+                       placeholder="Nhập tổng điểm...">
+            </div>
+
+            <input type="hidden" name="answer_id" value="{{ request.args.get('answer_id') }}">
+            
+            <div class="form-actions">
+                <a href="{{ url_for('teacher_result') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Hủy bỏ
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i>
+                    Xác nhận kết quả
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

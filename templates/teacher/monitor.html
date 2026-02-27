@@ -1,0 +1,180 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}{% if exam_title %}Giám Sát: {{ exam_title }}{% else %}Giám Sát Thi{% endif %}{% endblock %}
+
+{% from 'teacher/_menu_macros.html' import teacher_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ teacher_sidebar_menu('monitor') }}
+{% endblock %}
+
+{% block topbar_actions %}
+{% if exam_id %}
+<a href="/teacher/monitor" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Chọn Kỳ Thi Khác
+</a>
+{% endif %}
+{% endblock %}
+
+{% block page_content %}
+
+{% if not exam_id %}
+<!-- Exam Selection View -->
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2.5rem; margin-bottom: 2rem; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 15px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <i class="fas fa-tv" style="font-size: 2rem; color: white;"></i>
+        </div>
+        <div>
+            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Giám Sát Thi</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.95; font-size: 1.05rem;">Chọn kỳ thi để theo dõi vi phạm trong thời gian thực</p>
+        </div>
+    </div>
+</div>
+
+<div class="content-card" style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 2rem;">
+    <h3 style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 1.25rem; font-weight: 600;">
+        <i class="fas fa-list"></i> Danh Sách Kỳ Thi
+    </h3>
+    
+    {% if exams %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+        {% for exam in exams %}
+        <a href="{{ url_for('teacher.monitor', exam_id=exam.exam_id) }}" style="text-decoration: none;">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; transition: all 0.3s; cursor: pointer;" 
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.12)'; this.style.borderColor='#667eea';" 
+                 onmouseout="this.style.transform=''; this.style.boxShadow=''; this.style.borderColor='#e2e8f0';">
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-file-alt" style="color: white; font-size: 1.25rem;"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1e293b; font-size: 1.05rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ exam.exam_title }}
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.875rem;">
+                                <i class="fas fa-calendar" style="width: 14px;"></i>
+                                <span>{{ exam.exam_date.strftime('%d/%m/%Y') if exam.exam_date else 'N/A' }}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.875rem;">
+                                <i class="fas fa-clock" style="width: 14px;"></i>
+                                <span>
+                                    {% if exam.exam_time %}
+                                        {% set hours = (exam.exam_time.seconds // 3600) %}
+                                        {% set minutes = ((exam.exam_time.seconds % 3600) // 60) %}
+                                        {{ '%02d:%02d'|format(hours, minutes) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: right;">
+                    <span style="color: #667eea; font-weight: 600; font-size: 0.875rem;">
+                        Giám Sát <i class="fas fa-arrow-right" style="margin-left: 0.25rem;"></i>
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+        <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p style="font-size: 1.1rem; margin: 0;">Chưa có kỳ thi nào</p>
+    </div>
+    {% endif %}
+</div>
+
+{% else %}
+<!-- Monitor View for Selected Exam -->
+<div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; color: white; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <i class="fas fa-tv" style="font-size: 1.5rem;"></i>
+        </div>
+        <div style="flex: 1;">
+            <h1 style="margin: 0; font-size: 1.75rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Giám Sát: {{ exam_title }}</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Theo dõi vi phạm trong thời gian thực</p>
+        </div>
+        <div style="text-align: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 1rem 1.5rem; border-radius: 12px;">
+            <div style="font-size: 2rem; font-weight: 700;">{{ violations|length }}</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">Vi Phạm</div>
+        </div>
+    </div>
+</div>
+
+<section style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 2rem;">
+    <h3 style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 1.25rem; font-weight: 600;">
+        <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Nhật Ký Vi Phạm
+    </h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Thời Gian</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Sinh Viên</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569;">Email</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: #475569;">Số Vi Phạm</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: #475569;">Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if violations %}
+                    {% set unique_users = {} %}
+                    {% for violation in violations %}
+                        {% if violation.user_id not in unique_users %}
+                        <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <td style="padding: 1rem; color: #64748b; font-size: 0.9rem;">
+                                <i class="fas fa-clock" style="margin-right: 0.5rem; color: #94a3b8;"></i>
+                                {{ violation.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}
+                            </td>
+                            <td style="padding: 1rem; color: #1e293b; font-weight: 500;">
+                                <i class="fas fa-user-circle" style="margin-right: 0.5rem; color: #667eea;"></i>
+                                {{ violation.student_name }}
+                            </td>
+                            <td style="padding: 1rem; color: #64748b; font-size: 0.9rem;">{{ violation.email }}</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                {% set user_violations = violations|selectattr('user_id', 'equalto', violation.user_id)|list %}
+                                <span style="display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; padding: 0.4rem 0.9rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem;">
+                                    {{ user_violations|length }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <a href="{{ url_for('teacher.violations_detail', user_id=violation.user_id, exam_id=exam_id) }}" 
+                                   style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s;"
+                                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';"
+                                   onmouseout="this.style.transform=''; this.style.boxShadow='';">
+                                    <i class="fas fa-eye"></i>
+                                    Xem Chi Tiết
+                                </a>
+                            </td>
+                        </tr>
+                        {% set _ = unique_users.update({violation.user_id: true}) %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 4rem 2rem;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
+                            <i class="fas fa-check-circle" style="font-size: 2.5rem; color: white;"></i>
+                        </div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #1e293b; font-size: 1.25rem; font-weight: 700;">Không Có Vi Phạm</h3>
+                        <p style="margin: 0; color: #64748b; font-size: 1rem;">Chưa ghi nhận vi phạm nào cho kỳ thi này</p>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

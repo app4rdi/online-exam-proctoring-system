@@ -1,0 +1,78 @@
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+REFACTORING_PLAN.md
+PROJECT_STRUCTURE.md
+readme-images/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+violation_screenshots/
+*.json
+!package.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Node modules (if any)
+node_modules/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# AI Models (will be downloaded at runtime if needed)
+# Uncomment if models are pre-downloaded
+# *.pt
+# *.caffemodel
+# *.prototxt

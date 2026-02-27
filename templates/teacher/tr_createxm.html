@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Đề Thi Mới</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create-exam-form.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-file-alt"></i>
+                Tạo Đề Thi Mới
+            </h1>
+            <a href="#" class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-left"></i>
+                Quay lại Dashboard
+            </a>
+        </div>
+
+        <div class="main-content">
+            <form id="exam-form" action="/teacher/tr_createxm" method="post" enctype="multipart/form-data">
+                
+                <!-- Exam Title Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-heading"></i>
+                        Thông Tin Đề Thi
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Tên Đề Thi<span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-input" 
+                               id="exam-title" 
+                               name="exam-title" 
+                               placeholder="Ví dụ: Kiểm tra giữa kỳ Toán Cao Cấp 1"
+                               required>
+                    </div>
+                </div>
+
+                <!-- Exam Type Section -->
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Loại Đề Thi
+                    </div>
+                    <div class="exam-type-selector">
+                        <label class="exam-type-card selected" data-type="objective">
+                            <input type="radio" name="exam-type" value="objective" required checked>
+                            <div class="card-content">
+                                <div class="card-icon">
+                                    <i class="fas fa-check-square"></i>
+                                </div>
+                                <div class="card-title">Trắc Nghiệm</div>
+                                <div class="card-description">
+                                    Câu hỏi có nhiều lựa chọn, sinh viên chọn đáp án đúng
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Questions Section -->
+                <div id="questions-section" class="section hidden">
+                    <div class="section-title">
+                        <i class="fas fa-question-circle"></i>
+                        Danh Sách Câu Hỏi
+                    </div>
+                    
+                    <div class="alert alert-warning" id="exam-type-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Vui lòng chọn loại đề thi trước khi thêm câu hỏi</span>
+                    </div>
+
+                    <div id="questions-container" class="questions-container"></div>
+
+                    <button type="button" id="add-question-btn" class="add-question-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        Thêm Câu Hỏi
+                    </button>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" id="cancelBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Hủy Bỏ
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i>
+                        Lưu Đề Thi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script>
+        // Detect if opened in iframe/modal and handle back button
+        const isInIframe = window.self !== window.top;
+        const backBtn = document.getElementById('backBtn');
+        const header = document.querySelector('.header');
+        
+        // Function to send height to parent
+        function sendHeightToParent() {
+            if (isInIframe) {
+                const height = document.body.scrollHeight;
+                window.parent.postMessage({
+                    type: 'iframeHeight',
+                    height: height
+                }, '*');
+            }
+        }
+        
+        if (isInIframe) {
+            // Hide header when in modal
+            header.style.display = 'none';
+            
+            // Optimize for modal display
+            document.body.style.background = 'white';
+            document.body.style.padding = '0';
+            document.querySelector('.container').style.boxShadow = 'none';
+            document.querySelector('.container').style.borderRadius = '0';
+            document.querySelector('.main-content').style.padding = '20px';
+            
+            backBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.parent.postMessage('closeModal', '*');
+            });
+            
+            // Send initial height
+            setTimeout(sendHeightToParent, 100);
+            
+            // Send height when content changes
+            const observer = new MutationObserver(sendHeightToParent);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+            
+            // Send height on window resize
+            window.addEventListener('resize', sendHeightToParent);
+            
+            // Check for success message and notify parent
+            const flashMessages = document.querySelectorAll('.alert-success, .flash-success');
+            if (flashMessages.length > 0) {
+                window.parent.postMessage('examCreated', '*');
+            }
+        } else {
+            backBtn.href = '/teacher/trdash';
+        }
+        
+        // Handle cancel button
+        const cancelBtn = document.getElementById('cancelBtn');
+        cancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (isInIframe) {
+                // In modal: close modal
+                window.parent.postMessage('closeModal', '*');
+            } else {
+                // Standalone: redirect to dashboard
+                window.location.href = '/teacher/trdash';
+            }
+        });
+        
+        let questionCounter = 0;
+        let selectedExamType = 'objective';
+
+        // Auto-show questions section for objective type
+        document.getElementById('questions-section').classList.remove('hidden');
+        document.getElementById('exam-type-warning').classList.add('hidden');
+
+        // Handle exam type selection
+        document.querySelectorAll('.exam-type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                document.querySelectorAll('.exam-type-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                selectedExamType = this.dataset.type;
+                
+                // Show questions section
+                document.getElementById('questions-section').classList.remove('hidden');
+                document.getElementById('exam-type-warning').classList.add('hidden');
+                
+                // Clear existing questions when changing exam type
+                document.getElementById('questions-container').innerHTML = '';
+                questionCounter = 0;
+                
+                // Update parent iframe height
+                if (typeof sendHeightToParent === 'function') {
+                    setTimeout(sendHeightToParent, 100);
+                }
+            });
+        });
+
+        // Add question button
+        document.getElementById('add-question-btn').addEventListener('click', function() {
+            if (!selectedExamType) {
+                showToast('Vui lòng chọn loại đề thi trước!', 'warning');
+                return;
+            }
+            
+            questionCounter++;
+            addQuestion(selectedExamType, questionCounter);
+        });
+
+        function addQuestion(type, number) {
+            const container = document.getElementById('questions-container');
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.dataset.questionNumber = number;
+            
+            // Only objective type is supported
+            questionCard.innerHTML = createMultipleChoiceQuestion(number);
+            
+            container.appendChild(questionCard);
+            
+            // Setup event listeners
+            setupQuestionEvents(questionCard, type, number);
+            
+            // Update parent iframe height
+            if (typeof sendHeightToParent === 'function') {
+                setTimeout(sendHeightToParent, 100);
+            }
+        }
+
+        function createMultipleChoiceQuestion(number) {
+            return `
+                <div class="question-header">
+                    <div class="question-number">
+                        <i class="fas fa-grip-vertical"></i>
+                        Câu ${number}
+                    </div>
+                    <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">
+                        <i class="fas fa-trash"></i>
+                        Xóa
+                    </button>
+                </div>
+                <div class="question-body">
+                    <div class="form-group">
+                        <label class="form-label">Nội dung câu hỏi<span class="required">*</span></label>
+                        <textarea class="form-input" 
+                                  name="questions[]" 
+                                  rows="3" 
+                                  placeholder="Nhập nội dung câu hỏi..."
+                                  style="width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;"
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Hình ảnh câu hỏi (tùy chọn)</label>
+                        <div class="image-upload-area" onclick="document.getElementById('img-obj-${number}').click()">
+                            <input type="file" 
+                                   id="img-obj-${number}" 
+                                   name="upload-image-obj-${number}" 
+                                   accept="image/*" 
+                                   style="display: none;">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text">Nhấp để tải lên hình ảnh</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Các lựa chọn<span class="required">*</span>
+                            <small style="color: var(--text-light); font-weight: 400; margin-left: 8px;">
+                                (Chọn đáp án đúng)
+                            </small>
+                        </label>
+                        <div class="options-container" data-question="${number}">
+                            <div class="option-item">
+                                <input type="radio" name="correct-answer-${number}" value="1" class="option-radio" required>
+                                <span class="option-letter">A.</span>
+                                <input type="text" class="option-input" placeholder="Nhập lựa chọn A..." required>
+                                <span class="delete-option-btn" onclick="deleteOption(this)" style="visibility: hidden;">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                            </div>
+                            <div class="option-item">
+                                <input type="radio" name="correct-answer-${number}" value="2" class="option-radio" required>
+                                <span class="option-letter">B.</span>
+                                <input type="text" class="option-input" placeholder="Nhập lựa chọn B..." required>
+                                <span class="delete-option-btn" onclick="deleteOption(this)" style="visibility: hidden;">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn" onclick="addOption(${number})">
+                            <i class="fas fa-plus"></i>
+                            Thêm lựa chọn
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Điểm<span class="required">*</span></label>
+                        <div class="marks-input-group">
+                            <input type="number" 
+                                   name="obj-marks[]" 
+                                   class="marks-input" 
+                                   min="0" 
+                                   step="0.5" 
+                                   placeholder="0" 
+                                   required>
+                            <span style="color: var(--text-light);">điểm</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupQuestionEvents(questionCard, type, number) {
+            // Image upload preview
+            const fileInput = questionCard.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const uploadArea = questionCard.querySelector('.image-upload-area');
+                            uploadArea.classList.add('has-image');
+                            uploadArea.innerHTML = `
+                                <img src="${event.target.result}" class="image-preview" alt="Preview">
+                                <button type="button" 
+                                        onclick="removeImage(this)" 
+                                        style="margin-top: 8px; padding: 6px 12px; background: var(--danger-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                    <i class="fas fa-times"></i> Xóa hình
+                                </button>
+                            `;
+                            
+                            // Update parent iframe height after image loads
+                            if (typeof sendHeightToParent === 'function') {
+                                setTimeout(sendHeightToParent, 100);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+
+        async function deleteQuestion(btn) {
+            const confirmed = await showConfirm(
+                'Câu hỏi sẽ bị xóa khỏi đề thi.',
+                'Xóa câu hỏi?',
+                { type: 'danger', confirmText: 'Xóa', cancelText: 'Hủy' }
+            );
+            
+            if (confirmed) {
+                btn.closest('.question-card').remove();
+                renumberQuestions();
+                
+                // Update parent iframe height
+                if (typeof sendHeightToParent === 'function') {
+                    setTimeout(sendHeightToParent, 100);
+                }
+            }
+        }
+
+        function renumberQuestions() {
+            const questions = document.querySelectorAll('.question-card');
+            questions.forEach((card, index) => {
+                const number = index + 1;
+                card.querySelector('.question-number').innerHTML = `
+                    <i class="fas fa-grip-vertical"></i>
+                    Câu ${number}
+                `;
+            });
+            questionCounter = questions.length;
+        }
+
+        const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+        function addOption(questionNumber) {
+            const container = document.querySelector(`.options-container[data-question="${questionNumber}"]`);
+            const currentOptions = container.querySelectorAll('.option-item').length;
+            
+            if (currentOptions >= 8) {
+                showToast('Tối đa 8 lựa chọn cho mỗi câu hỏi!', 'warning');
+                return;
+            }
+            
+            const newOptionNumber = currentOptions + 1;
+            const optionItem = document.createElement('div');
+            optionItem.className = 'option-item';
+            optionItem.innerHTML = `
+                <input type="radio" name="correct-answer-${questionNumber}" value="${newOptionNumber}" class="option-radio" required>
+                <span class="option-letter">${optionLetters[currentOptions]}.</span>
+                <input type="text" class="option-input" placeholder="Nhập lựa chọn ${optionLetters[currentOptions]}..." required>
+                <span class="delete-option-btn" onclick="deleteOption(this)">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+            
+            container.appendChild(optionItem);
+            updateDeleteButtonsVisibility(container);
+            
+            // Update parent iframe height
+            if (typeof sendHeightToParent === 'function') {
+                setTimeout(sendHeightToParent, 50);
+            }
+        }
+
+        function deleteOption(btn) {
+            const optionItem = btn.closest('.option-item');
+            const container = optionItem.closest('.options-container');
+            const optionCount = container.querySelectorAll('.option-item').length;
+            
+            if (optionCount <= 2) {
+                showToast('Phải có ít nhất 2 lựa chọn!', 'warning');
+                return;
+            }
+            
+            optionItem.remove();
+            renumberOptions(container);
+            updateDeleteButtonsVisibility(container);
+            
+            // Update parent iframe height
+            if (typeof sendHeightToParent === 'function') {
+                setTimeout(sendHeightToParent, 50);
+            }
+        }
+
+        function renumberOptions(container) {
+            const options = container.querySelectorAll('.option-item');
+            const questionNumber = container.dataset.question;
+            
+            options.forEach((option, index) => {
+                const radio = option.querySelector('.option-radio');
+                const letter = option.querySelector('.option-letter');
+                
+                radio.value = index + 1;
+                letter.textContent = `${optionLetters[index]}.`;
+            });
+        }
+
+        function updateDeleteButtonsVisibility(container) {
+            const deleteButtons = container.querySelectorAll('.delete-option-btn');
+            const optionCount = deleteButtons.length;
+            
+            deleteButtons.forEach(btn => {
+                btn.style.visibility = optionCount > 2 ? 'visible' : 'hidden';
+            });
+        }
+
+        function removeImage(btn) {
+            const uploadArea = btn.closest('.image-upload-area');
+            const fileInput = uploadArea.querySelector('input[type="file"]');
+            const questionNumber = fileInput.id.split('-').pop();
+            const isObjective = fileInput.id.includes('obj');
+            
+            uploadArea.classList.remove('has-image');
+            uploadArea.innerHTML = `
+                <input type="file" 
+                       id="img-${isObjective ? 'obj' : 'subj'}-${questionNumber}" 
+                       name="upload-image-${isObjective ? 'obj' : 'subj'}-${questionNumber}" 
+                       accept="image/*" 
+                       style="display: none;">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <div class="upload-text">Nhấp để tải lên hình ảnh</div>
+            `;
+            uploadArea.onclick = function() {
+                document.getElementById(`img-${isObjective ? 'obj' : 'subj'}-${questionNumber}`).click();
+            };
+            
+            // Re-attach event listener
+            const newFileInput = uploadArea.querySelector('input[type="file"]');
+            newFileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        uploadArea.classList.add('has-image');
+                        uploadArea.innerHTML = `
+                            <img src="${event.target.result}" class="image-preview" alt="Preview">
+                            <button type="button" 
+                                    onclick="removeImage(this)" 
+                                    style="margin-top: 8px; padding: 6px 12px; background: var(--danger-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                <i class="fas fa-times"></i> Xóa hình
+                            </button>
+                        `;
+                        
+                        // Update parent iframe height after image loads
+                        if (typeof sendHeightToParent === 'function') {
+                            setTimeout(sendHeightToParent, 100);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Update parent iframe height after removing image
+            if (typeof sendHeightToParent === 'function') {
+                setTimeout(sendHeightToParent, 100);
+            }
+        }
+
+        // Form submission with validation
+        document.getElementById('exam-form').addEventListener('submit', function(e) {
+            if (questionCounter === 0) {
+                e.preventDefault();
+                showToast('Vui lòng thêm ít nhất một câu hỏi!', 'warning');
+                return false;
+            }
+
+            // Collect options for multiple choice questions
+            if (selectedExamType === 'objective') {
+                const questionsCards = document.querySelectorAll('.question-card');
+                questionsCards.forEach((card, index) => {
+                    const optionsContainer = card.querySelector('.options-container');
+                    if (optionsContainer) {
+                        const optionInputs = optionsContainer.querySelectorAll('.option-input');
+                        const options = Array.from(optionInputs).map(input => input.value.trim()).join('|');
+                        
+                        // Create hidden input for options
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'options[]';
+                        hiddenInput.value = options;
+                        card.appendChild(hiddenInput);
+                        
+                        // Get correct answer
+                        const correctRadio = optionsContainer.querySelector('input[type="radio"]:checked');
+                        if (correctRadio) {
+                            const correctInput = document.createElement('input');
+                            correctInput.type = 'hidden';
+                            correctInput.name = 'correct_answers[]';
+                            correctInput.value = correctRadio.value;
+                            card.appendChild(correctInput);
+                        }
+                    }
+                });
+            }
+            
+            return true;
+        });
+    </script>
+</body>
+</html>

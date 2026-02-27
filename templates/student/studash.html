@@ -1,0 +1,102 @@
+{% extends "base/dashboard.html" %}
+
+{% set sidebar_gradient = True %}
+{% set has_topbar = True %}
+
+{% block title %}Student Dashboard - ProctorEdu{% endblock %}
+
+{% from 'student/_menu_macros.html' import student_sidebar_menu %}
+
+{% block sidebar_menu %}
+{{ student_sidebar_menu('dashboard') }}
+{% endblock %}
+
+{% block topbar_title %}Dashboard{% endblock %}
+{% block topbar_icon %}<i class="fas fa-home"></i>{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-outline">
+    <i class="fas fa-bell"></i>
+    Notifications
+</button>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <h2>Welcome back, {{ session.get('name', 'Student') }}! 👋</h2>
+    <p>Ready to continue your learning journey?</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Available Exams</div>
+            <div class="stat-value">{{ stats.available_exams or 0 }}</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value">{{ stats.completed_exams or 0 }}</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value">{{ stats.pending_exams or 0 }}</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Average Score</div>
+            <div class="stat-value">{{ stats.average_score or 0 }}%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="{{ url_for('student.exam_list') }}" class="quick-action-card">
+        <i class="fas fa-play-circle"></i>
+        <h3>Take Exam</h3>
+        <p>Start a new exam</p>
+    </a>
+    
+    <a href="{{ url_for('student.stu_result') }}" class="quick-action-card">
+        <i class="fas fa-chart-bar"></i>
+        <h3>View Results</h3>
+        <p>Check your scores</p>
+    </a>
+    
+    <a href="{{ url_for('student.exam_list') }}" class="quick-action-card">
+        <i class="fas fa-clipboard-list"></i>
+        <h3>Available Exams</h3>
+        <p>View assigned exams</p>
+    </a>
+    
+    <a href="{{ url_for('student.stu_complaint') }}" class="quick-action-card">
+        <i class="fas fa-comment-dots"></i>
+        <h3>Support</h3>
+        <p>Get help</p>
+    </a>
+</div>
+
+{% endblock %}
